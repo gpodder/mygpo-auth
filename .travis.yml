@@ -1,0 +1,15 @@
+language: python
+
+python:
+  - "3.4"
+  - "pypy3"
+
+nstall:
+  - travis_retry pip install -r requirements.txt
+  - travis_retry pip install coveralls
+
+script:
+  - coverage run --branch --source=mygpoauth ./manage.py test
+
+after_script:
+  - coveralls
