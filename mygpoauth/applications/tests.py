@@ -8,10 +8,6 @@ from mygpoauth.applications import models
 class Applications(TestCase):
 
     def test_unique_client_id(self):
-
-        # ensures that imports are considered in test coverage
-        reload(models)
-
         app1 = models.Application.objects.create(name='app1', client_id='app')
 
         with self.assertRaises(IntegrityError):
