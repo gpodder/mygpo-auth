@@ -24,3 +24,23 @@ class MissingGrantType(UnsupportedGrantType):
         super()
         self.error_description = ('The required parameter "grant_type" is '
                                   'missing.')
+
+
+class InvalidGrant(OAuthError):
+    """ The provided authorization grant (e.g., authorization code, resource
+    owner credentials) or refresh token is invalid, expired, revoked, does not
+    match the redirection URI used in the authorization request, or was issued
+    to another client.  """
+
+    error = 'invalid_grant'
+    error_description = 'The given grant was invalid'
+
+
+class InvalidRequest(OAuthError):
+    """ The request is missing a required parameter, includes an unsupported
+    parameter value (other than grant type), repeats a parameter, includes
+    multiple credentials, utilizes more than one mechanism for authenticating
+    the client, or is otherwise malformed."""
+
+    error = 'invalid_request'
+    error_description = 'Request was malformed'

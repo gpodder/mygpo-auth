@@ -1,4 +1,5 @@
 import base64
+import uuid
 import urllib.parse
 from functools import wraps
 
@@ -7,9 +8,12 @@ from django.views.generic.base import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
 
 from mygpoauth.applications.models import Application
-from .exceptions import MissingGrantType, UnsupportedGrantType, OAuthError
+from mygpoauth.authorization.models import Authorization
+from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
+                         InvalidGrant, InvalidRequest)
 
 
 def cors(f):
@@ -72,11 +76,22 @@ class AuthorizeView(View):
         # if present it is included in the redirect url
         state = request.GET.get('state')
 
-        scope = request.GET.get('scope')
+        scope = request.GET.get('scope', '')
+
+        # TODO: get logged in user
+        user = User.objects.first()
+
+        auth, created = Authorization.objects.update_or_create(
+            user=user,
+            application=application,
+            defaults={
+                'scopes': scope.split(' '),
+            }
+        )
 
         # authorization token
         # code=n96wRPxkqNMQ579UFCCrLNlGpt7mok&state=random_state_string
-        code = 'asdf'
+        code = auth.code.hex
 
         redir_url = self.build_redirect_url(application, code, state)
         return http.HttpResponseRedirect(redir_url)
@@ -123,6 +138,23 @@ class TokenView(View):
             raise MissingGrantType
 
         if req[b'grant_type'] == [b'authorization_code']:
+
+            if len(req.get(b'code', [])) != 1:
+                # code parameter missing or duplicated
+                raise InvalidRequest
+
+            try:
+                code = uuid.UUID(req[b'code'][0].decode('ascii'))
+            except ValueError:
+                # code is malformed
+                raise InvalidGrant
+
+            try:
+                auth = Authorization.objects.get(code=code)
+
+            except Authorization.DoesNotExist:
+                raise InvalidGrant
+
             # {b'grant_type': [b'authorization_code'],
             #  b'code': [b'asdf'],
             #  b'redirect_uri': [b'http://django-oauth-toolkit.herokuapp.com/
