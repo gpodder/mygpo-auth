@@ -4,7 +4,10 @@ python:
   - "3.4"
   - "pypy3"
 
-nstall:
+before_install:
+    - sudo apt-get install -y libffi-dev
+
+install:
   - travis_retry pip install -r requirements.txt
   - travis_retry pip install coveralls
 
@@ -13,8 +16,6 @@ script:
 
 after_script:
   - coveralls
-
-sudo: false
 
 env:
  - DATABASE_URL="postgres://postgres@localhost/mygpo_test"

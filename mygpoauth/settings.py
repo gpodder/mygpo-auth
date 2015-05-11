@@ -1,5 +1,6 @@
 import os
 import dj_database_url
+from psycopg2cffi import compat
 
 """
 Django settings for mygpoauth project.
@@ -77,6 +78,10 @@ WSGI_APPLICATION = 'mygpoauth.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
+
+# psycopg2cffi compatability mode
+# https://pypi.python.org/pypi/psycopg2cffi
+compat.register()
 
 DATABASES = {
     'default': dj_database_url.config(),
