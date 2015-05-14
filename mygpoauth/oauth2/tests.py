@@ -95,6 +95,16 @@ class OAuth2Flow(OAuthTestBase):
         self.assertIn('refresh_token', resp)
         self.assertEquals(resp['token_type'], 'Bearer')
         self.assertIn('access_token', resp)
+
+        # from http://tools.ietf.org/html/rfc6749#section-5.1
+        # The authorization server MUST include the HTTP "Cache-Control"
+        # response header field [RFC2616] with a value of "no-store" in any
+        # response containing tokens, credentials, or other sensitive
+        # information, as well as the "Pragma" response header field [RFC2616]
+        # with a value of "no-cache".
+        self.assertEquals(response['Cache-Control'], 'no-store')
+        self.assertEquals(response['Pragma'], 'no-cache')
+
         if validate_scopes:
             self.assertEquals(set(resp['scope'].split()),
                               {'subscriptions', 'apps:get'})

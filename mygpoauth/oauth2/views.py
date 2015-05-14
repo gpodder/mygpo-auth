@@ -7,6 +7,7 @@ from django import http
 from django.views.generic.base import View
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.cache import cache_control
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 
@@ -135,8 +136,11 @@ class TokenView(OAuthView):
 
     @method_decorator(csrf_exempt)
     @method_decorator(cors)
+    @method_decorator(cache_control(no_store=True))
     def dispatch(self, request, *args, **kwargs):
-        return super(TokenView, self).dispatch(request, *args, **kwargs)
+        response = super(TokenView, self).dispatch(request, *args, **kwargs)
+        response['Pragma'] = 'no-cache'
+        return response
 
     def options(self, request):
         return http.HttpResponse('')
