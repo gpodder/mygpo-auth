@@ -9,7 +9,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_control
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
 
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
@@ -100,6 +100,7 @@ class AuthorizeView(OAuthView):
 
     http://tools.ietf.org/html/rfc6749#section-3.1 """
 
+    @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
 
         client_id = request.GET.get('client_id')
@@ -119,11 +120,8 @@ class AuthorizeView(OAuthView):
         except ScopeError as se:
             raise InvalidScope(str(se))
 
-        # TODO: get logged in user
-        user = User.objects.first()
-
         auth, created = Authorization.objects.update_or_create(
-            user=user,
+            user=request.user,
             application=application,
             defaults={
                 'scopes': list(scopes),

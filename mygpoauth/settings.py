@@ -43,6 +43,7 @@ INSTALLED_APPS = (
     'mygpoauth.applications',
     'mygpoauth.authorization',
     'mygpoauth.oauth2',
+    'mygpoauth.login',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -124,3 +125,5 @@ STATICFILES_DIRS = (
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 NOSE_ARGS = ['--with-doctest']
+
+LOGIN_URL = 'login:login'

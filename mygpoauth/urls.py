@@ -15,4 +15,5 @@ urlpatterns = [
         name='index'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^oauth2/', include('mygpoauth.oauth2.urls', namespace='oauth2')),
+    url(r'^login/', include('mygpoauth.login.urls', namespace='login')),
 ]

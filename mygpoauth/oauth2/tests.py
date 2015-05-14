@@ -1,6 +1,8 @@
 import urllib.parse
 import uuid
+import string
 import json
+import random
 
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
@@ -22,7 +24,12 @@ class OAuthTestBase(TestCase):
             username='username',
             email='user@example.com',
         )
+        pwd = "".join(random.sample(string.ascii_letters, 8))
+        self.user.set_password(pwd)
+        self.user.save()
+
         self.client = Client()
+        self.client.login(username=self.user.username, password=pwd)
 
     def tearDown(self):
         Authorization.objects.filter(application=self.app).delete()
