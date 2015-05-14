@@ -156,15 +156,7 @@ class TokenView(OAuthView):
 
         if req[b'grant_type'] == [b'authorization_code']:
 
-            if len(req.get(b'code', [])) != 1:
-                # code parameter missing or duplicated
-                raise InvalidRequest
-
-            try:
-                code = uuid.UUID(req[b'code'][0].decode('ascii'))
-            except ValueError:
-                # code is malformed
-                raise InvalidGrant
+            code = self._get_code(req)
 
             try:
                 auth = Authorization.objects.get(code=code)
@@ -198,3 +190,15 @@ class TokenView(OAuthView):
             raise UnsupportedGrantType(grant_type)
 
         return http.JsonResponse(resp)
+
+    def _get_code(self, req):
+        """ Returns the "code" value from the request """
+        if len(req.get(b'code', [])) != 1:
+            # code parameter missing or duplicated
+            raise InvalidRequest
+
+        try:
+            return uuid.UUID(req[b'code'][0].decode('ascii'))
+        except ValueError:
+            # code is malformed
+            raise InvalidGrant
