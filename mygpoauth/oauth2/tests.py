@@ -37,7 +37,7 @@ class OAuth2Flow(TestCase):
             ('client_id', self.app.client_id),
             ('response_type', '????'),
             ('state', 'some_state'),
-            ('scope', 'read write'),
+            ('scope', 'subscriptions apps:get'),
         ])
 
         # Verify that the Authorization server redirects back correctly
@@ -66,7 +66,7 @@ class OAuth2Flow(TestCase):
             'code': code,
             'redirect_uri': self.app.redirect_url,
         }
-        resp = self.token_request(req)
+        resp = self.token_request(req, True)
 
         # Request access token from refresh_token
         refresh_token = resp['refresh_token']
@@ -74,9 +74,9 @@ class OAuth2Flow(TestCase):
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,
         }
-        resp = self.token_request(req)
+        resp = self.token_request(req, False)  # no real scopes provided yet
 
-    def token_request(self, req):
+    def token_request(self, req, validate_scopes):
         """ Carry out (and verify) a successful token request """
         token_url = reverse('oauth2:token')
         response = self.client.post(
@@ -91,7 +91,9 @@ class OAuth2Flow(TestCase):
         self.assertIn('refresh_token', resp)
         self.assertEquals(resp['token_type'], 'Bearer')
         self.assertIn('access_token', resp)
-        self.assertIn('scope', resp)
+        if validate_scopes:
+            self.assertEquals(set(resp['scope'].split()),
+                              {'subscriptions', 'apps:get'})
         self.assertIn('expires_in', resp)
         return resp
 
@@ -153,6 +155,24 @@ class OAuth2Flow(TestCase):
             'redirect_uri': self.app.redirect_url,
         }
         self._do_invalid_token_request(req, 'invalid_grant')
+
+    def test_invalid_scope(self):
+        """ Test a request for aninvalid scope """
+        auth_url = reverse('oauth2:authorize')
+
+        query = urllib.parse.urlencode([
+            ('client_id', self.app.client_id),
+            ('response_type', '????'),
+            ('state', 'some_state'),
+            ('scope', 'invalid scope'),
+        ])
+
+        # Verify that the Authorization server redirects back correctly
+        response = self.client.get(auth_url + '?' + query, follow=False)
+
+        self.assertEquals(response.status_code, 400)
+        resp = json.loads(response.content.decode('ascii'))
+        self.assertEquals(resp['error'], 'invalid_scope')
 
     def _do_invalid_token_request(self, req, error):
         token_url = reverse('oauth2:token')

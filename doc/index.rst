@@ -38,6 +38,7 @@ To register a new client application, please fill out this `form
 .. toctree::
    :maxdepth: 2
 
+   scopes
    RFC 6749 <http://tools.ietf.org/html/rfc6749>
    GitHub <https://github.com/gpodder/mygpo-auth>
    Travis-CI <https://travis-ci.org/gpodder/mygpo-auth/>

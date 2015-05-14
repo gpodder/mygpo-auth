@@ -44,3 +44,11 @@ class InvalidRequest(OAuthError):
 
     error = 'invalid_request'
     error_description = 'Request was malformed'
+
+
+class InvalidScope(OAuthError):
+    """ The requested scope is invalid, unknown, malformed, or exceeds the
+    scope granted by the resource owner."""
+
+    error = 'invalid_scope'
+    error_description = 'The requested scope was invalid'

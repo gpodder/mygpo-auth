@@ -12,8 +12,25 @@ from django.contrib.auth.models import User
 
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
+from mygpoauth.authorization.scope import parse_scopes, ScopeError
 from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
-                         InvalidGrant, InvalidRequest)
+                         InvalidGrant, InvalidRequest, InvalidScope)
+
+
+class OAuthView(View):
+    """ The base view for the OAuth endpoints
+
+    http://tools.ietf.org/html/rfc6749#section-3 """
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            return super().dispatch(request, *args, **kwargs)
+
+        except OAuthError as e:
+            return http.JsonResponse({
+                'error': e.error,
+                'error_description': e.error_description,
+            }, status=400)
 
 
 def cors(f):
@@ -60,7 +77,7 @@ def require_application(f):
     return _wrapper
 
 
-class AuthorizeView(View):
+class AuthorizeView(OAuthView):
     """ The Authorization Endpoint
 
     http://tools.ietf.org/html/rfc6749#section-3.1 """
@@ -76,7 +93,10 @@ class AuthorizeView(View):
         # if present it is included in the redirect url
         state = request.GET.get('state')
 
-        scope = request.GET.get('scope', '')
+        try:
+            scopes = parse_scopes(request.GET.get('scope', ''))
+        except ScopeError as se:
+            raise InvalidScope(str(se))
 
         # TODO: get logged in user
         user = User.objects.first()
@@ -85,7 +105,7 @@ class AuthorizeView(View):
             user=user,
             application=application,
             defaults={
-                'scopes': scope.split(' '),
+                'scopes': list(scopes),
             }
         )
 
@@ -108,7 +128,7 @@ class AuthorizeView(View):
         return urllib.parse.urlunsplit(url_parts)
 
 
-class TokenView(View):
+class TokenView(OAuthView):
     """ The Token Endpoint
 
     http://tools.ietf.org/html/rfc6749#section-3.2 """
@@ -116,14 +136,7 @@ class TokenView(View):
     @method_decorator(csrf_exempt)
     @method_decorator(cors)
     def dispatch(self, request, *args, **kwargs):
-        try:
-            return super(TokenView, self).dispatch(request, *args, **kwargs)
-
-        except OAuthError as e:
-            return http.JsonResponse({
-                'error': e.error,
-                'error_description': e.error_description,
-            }, status=400)
+        return super(TokenView, self).dispatch(request, *args, **kwargs)
 
     def options(self, request):
         return http.HttpResponse('')
@@ -163,7 +176,7 @@ class TokenView(View):
                 'refresh_token': 'a',
                 'token_type': 'Bearer',
                 'access_token': 'b',
-                'scope': 'a b',
+                'scope': ' '.join(auth.scopes),
                 'expires_in': 3600,
             }
 
@@ -173,7 +186,7 @@ class TokenView(View):
                 'refresh_token': 'a',
                 'token_type': 'Bearer',
                 'access_token': 'b',
-                'scope': 'a b',
+                'scope': 'read write',
                 'expires_in': 3600,
             }
 
