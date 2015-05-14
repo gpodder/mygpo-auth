@@ -16,7 +16,7 @@ from mygpoauth.authorization.models import Authorization
 from mygpoauth.authorization.scope import parse_scopes, ScopeError
 from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
                          InvalidGrant, InvalidRequest, InvalidScope,
-                         InvalidClient)
+                         InvalidClient, UnsupportedResponseType)
 
 
 class OAuthView(View):
@@ -106,7 +106,10 @@ class AuthorizeView(OAuthView):
         application = get_object_or_404(Application, client_id=client_id)
 
         response_type = request.GET.get('response_type')
+
         # http://tools.ietf.org/html/rfc6749#section-3.1.1
+        if response_type != 'code':
+            raise UnsupportedResponseType(response_type)
 
         # if present it is included in the redirect url
         state = request.GET.get('state')

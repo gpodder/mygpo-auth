@@ -11,17 +11,20 @@ Redirect your users to the gpodder.net authorization page at
 
 with the following query parameters
 
-================ ==============================================================
-Name             Description
-================ ==============================================================
-``client_id``    The client ID you received when registering your app (see
-                 :doc:`register`).
-``redirect_uri`` The URL to which the user should be redirected after
-                 authorization.
-``scope``        A space-delimited set of :doc:`scopes` which the app requests.
-``state``        An unguessable random string. It is used to protect against
-                 cross-site request forgery attacks.
-================ ==============================================================
+================= =============================================================
+Name              Description
+================= =============================================================
+``client_id``     The client ID you received when registering your app (see
+                  :doc:`register`).
+``redirect_uri``  The URL to which the user should be redirected after
+                  authorization.
+``scope``         A space-delimited set of :doc:`scopes` which the app
+                  requests.
+``state``         An unguessable random string. It is used to protect against
+                  cross-site request forgery attacks.
+``response_type`` The string ``code`` indicating that an authorization code is
+                  requested.
+================= =============================================================
 
 
 2. User authenticates and authorizes your app

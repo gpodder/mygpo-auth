@@ -71,3 +71,15 @@ class InvalidClient(OAuthError):
 
     error = 'invalid_client'
     error_description = 'Client authentication failed'
+
+
+class UnsupportedResponseType(OAuthError):
+    """ The authorization server does not support obtaining an authorization
+    code using this method. """
+
+    def __init__(self, response_type):
+        self.error_description = (
+            'The response type "{response_type}" is not supported'
+            .format(response_type=response_type))
+
+    error = 'unsupported_response_type'

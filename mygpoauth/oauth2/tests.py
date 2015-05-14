@@ -39,7 +39,7 @@ class OAuth2Flow(OAuthTestBase):
 
         query = urllib.parse.urlencode([
             ('client_id', self.app.client_id),
-            ('response_type', '????'),
+            ('response_type', 'code'),
             ('state', 'some_state'),
             ('scope', 'subscriptions apps:get'),
         ])
@@ -179,21 +179,31 @@ class InvalidOAuth2Flow(OAuthTestBase):
 
     def test_invalid_scope(self):
         """ Test a request for aninvalid scope """
+        self._do_invalid_auth_request(scope='invalid scope',
+                                      error='invalid_scope')
+
+    def test_invalid_response_type(self):
+        self._do_invalid_auth_request(response_type='magic_response',
+                                      error='unsupported_response_type')
+
+    def _do_invalid_auth_request(self, response_type='code', scope='',
+                                 status=400, error=''):
         auth_url = reverse('oauth2:authorize')
 
         query = urllib.parse.urlencode([
             ('client_id', self.app.client_id),
-            ('response_type', '????'),
+            ('response_type', response_type),
             ('state', 'some_state'),
-            ('scope', 'invalid scope'),
+            ('scope', scope),
         ])
 
         # Verify that the Authorization server redirects back correctly
         response = self.client.get(auth_url + '?' + query, follow=False)
 
-        self.assertEquals(response.status_code, 400)
+        self.assertEquals(response.status_code, status)
         resp = json.loads(response.content.decode('ascii'))
-        self.assertEquals(resp['error'], 'invalid_scope')
+        self.assertEquals(resp['error'], error)
+        return response
 
     def _do_invalid_token_request(self, req, status, error, auth=None):
         """ Performs an invalid token requests and verifies the result
