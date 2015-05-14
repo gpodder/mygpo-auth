@@ -118,8 +118,8 @@ class OAuth2Flow(OAuthTestBase):
         self.assertEqual(response['Access-Control-Allow-Origin'], '*')
 
 
-class InvalidOAuth2Flow(OAuthTestBase):
-    """ Test various error cases during the OAuth flow """
+class InvalidTokenRequests(OAuthTestBase):
+    """ Test invalid requests to token endpoint """
 
     def test_missing_token_auth(self):
         """ Test missing Basic Auth for Token Endpoint """
@@ -177,34 +177,6 @@ class InvalidOAuth2Flow(OAuthTestBase):
         }
         self._do_invalid_token_request(req, 400, 'invalid_grant')
 
-    def test_invalid_scope(self):
-        """ Test a request for aninvalid scope """
-        self._do_invalid_auth_request(scope='invalid scope',
-                                      error='invalid_scope')
-
-    def test_invalid_response_type(self):
-        self._do_invalid_auth_request(response_type='magic_response',
-                                      error='unsupported_response_type')
-
-    def _do_invalid_auth_request(self, response_type='code', scope='',
-                                 status=400, error=''):
-        auth_url = reverse('oauth2:authorize')
-
-        query = urllib.parse.urlencode([
-            ('client_id', self.app.client_id),
-            ('response_type', response_type),
-            ('state', 'some_state'),
-            ('scope', scope),
-        ])
-
-        # Verify that the Authorization server redirects back correctly
-        response = self.client.get(auth_url + '?' + query, follow=False)
-
-        self.assertEquals(response.status_code, status)
-        resp = json.loads(response.content.decode('ascii'))
-        self.assertEquals(resp['error'], error)
-        return response
-
     def _do_invalid_token_request(self, req, status, error, auth=None):
         """ Performs an invalid token requests and verifies the result
 
@@ -227,6 +199,38 @@ class InvalidOAuth2Flow(OAuthTestBase):
             content_type='application/x-www-form-urlencoded',
             **headers
         )
+
+        self.assertEquals(response.status_code, status)
+        resp = json.loads(response.content.decode('ascii'))
+        self.assertEquals(resp['error'], error)
+        return response
+
+
+class InvalidAuthRequests(OAuthTestBase):
+    """ Test invalid requests to authorization endpoint """
+
+    def test_invalid_scope(self):
+        """ Test a request for aninvalid scope """
+        self._do_invalid_auth_request(scope='invalid scope',
+                                      error='invalid_scope')
+
+    def test_invalid_response_type(self):
+        self._do_invalid_auth_request(response_type='magic_response',
+                                      error='unsupported_response_type')
+
+    def _do_invalid_auth_request(self, response_type='code', scope='',
+                                 status=400, error=''):
+        auth_url = reverse('oauth2:authorize')
+
+        query = urllib.parse.urlencode([
+            ('client_id', self.app.client_id),
+            ('response_type', response_type),
+            ('state', 'some_state'),
+            ('scope', scope),
+        ])
+
+        # Verify that the Authorization server redirects back correctly
+        response = self.client.get(auth_url + '?' + query, follow=False)
 
         self.assertEquals(response.status_code, status)
         resp = json.loads(response.content.decode('ascii'))
