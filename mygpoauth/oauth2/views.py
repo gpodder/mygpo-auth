@@ -113,7 +113,7 @@ class AuthorizeView(OAuthView):
             raise UnsupportedResponseType(response_type)
 
         # if present it is included in the redirect url
-        state = request.GET.get('state')
+        state = request.GET.get('state', '')
 
         try:
             scopes = parse_scopes(request.GET.get('scope', ''))
