@@ -15,7 +15,8 @@ from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
 from mygpoauth.authorization.scope import parse_scopes, ScopeError
 from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
-                         InvalidGrant, InvalidRequest, InvalidScope)
+                         InvalidGrant, InvalidRequest, InvalidScope,
+                         InvalidClient)
 
 
 class OAuthView(View):
@@ -27,11 +28,20 @@ class OAuthView(View):
         try:
             return super().dispatch(request, *args, **kwargs)
 
+        except InvalidClient as ic:
+            resp = http.JsonResponse(self._error_obj(ic), status=401)
+            auth_header = 'Basic realm="{realm}"'.format(realm=ic.realm)
+            resp['WWW-Authenticate'] = auth_header
+            return resp
+
         except OAuthError as e:
-            return http.JsonResponse({
-                'error': e.error,
-                'error_description': e.error_description,
-            }, status=400)
+            return http.JsonResponse(self._error_obj(e), status=400)
+
+    def _error_obj(self, exc):
+        return {
+            'error': exc.error,
+            'error_description': exc.error_description,
+        }
 
 
 def cors(f):
@@ -58,24 +68,31 @@ def cors(f):
     return _wrapper
 
 
-def require_application(f):
-    @wraps(f)
-    def _wrapper(request, *args, **kwargs):
-        auth = request.META.get('HTTP_AUTHORIZATION', '')
+def require_application(realm):
+    def _decorator(f):
+        @wraps(f)
+        def _wrapper(request, *args, **kwargs):
 
-        if not auth.startswith('Basic '):
-            return http.JsonResponse({}, status=401)
+            auth = request.META.get('HTTP_AUTHORIZATION', '')
 
-        auth = auth[len('Basic '):]
-        auth = base64.b64decode(auth.encode('ascii')).decode('ascii')
-        client_id, client_secret = auth.split(':')
+            if not auth.startswith('Basic '):
+                raise InvalidClient(realm=realm)
 
-        application = get_object_or_404(Application,
-                                        client_id=client_id,
-                                        client_secret=client_secret)
+            auth = auth[len('Basic '):]
+            auth = base64.b64decode(auth.encode('ascii')).decode('ascii')
+            client_id, client_secret = auth.split(':')
 
-        return f(request, application, *args, **kwargs)
-    return _wrapper
+            try:
+                application = Application.objects.get(
+                    client_id=client_id,
+                    client_secret=client_secret)
+            except Application.DoesNotExist:
+                raise InvalidClient(realm=realm)
+
+            return f(request, application, *args, **kwargs)
+
+        return _wrapper
+    return _decorator
 
 
 class AuthorizeView(OAuthView):
@@ -145,7 +162,7 @@ class TokenView(OAuthView):
     def options(self, request):
         return http.HttpResponse('')
 
-    @method_decorator(require_application)
+    @method_decorator(require_application(realm='OAuth2Token'))
     def post(self, request, application):
 
         req = urllib.parse.parse_qs(request.body)

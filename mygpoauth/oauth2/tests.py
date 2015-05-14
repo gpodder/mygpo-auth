@@ -123,34 +123,37 @@ class InvalidOAuth2Flow(OAuthTestBase):
 
     def test_missing_token_auth(self):
         """ Test missing Basic Auth for Token Endpoint """
-        token_url = reverse('oauth2:token')
-        response = self.client.post(
-            token_url,
-            '',
-            content_type='application/x-www-form-urlencoded',
-        )
-        self.assertEquals(response.status_code, 401)
+        app = Application(client_id='unknown', client_secret='unknown')
+        resp = self._do_invalid_token_request({}, 401, 'invalid_client',
+                                              auth=app_auth(app))
+        self.assertTrue(resp['WWW-Authenticate'].startswith('Basic realm="'))
+
+    def test_unknown_client_token_auth(self):
+        """ Unknown client when authenticating for Token Endpoint """
+        resp = self._do_invalid_token_request({}, 401, 'invalid_client',
+                                              auth='')
+        self.assertTrue(resp['WWW-Authenticate'].startswith('Basic realm="'))
 
     def test_invalid_grant_type(self):
         """ Invalid grant type: 400, error = unsupported_grant_type """
         req = {
             'grant_type': 'new_fancy_grant',
         }
-        self._do_invalid_token_request(req, 'unsupported_grant_type')
+        self._do_invalid_token_request(req, 400, 'unsupported_grant_type')
 
     def test_missing_grant_type(self):
         """ No grant_type results in 400 w/ error = unsupported_grant_type """
         req = {
             'asdf': 'test',
         }
-        self._do_invalid_token_request(req, 'unsupported_grant_type')
+        self._do_invalid_token_request(req, 400, 'unsupported_grant_type')
 
     def test_missing_grant(self):
         """ No grant results in 400 w/ error = invalid_request """
         req = {
             'grant_type': 'authorization_code',
         }
-        self._do_invalid_token_request(req, 'invalid_request')
+        self._do_invalid_token_request(req, 400, 'invalid_request')
 
     def test_invalid_grant(self):
         """ The auth code is not a valid UUID
@@ -163,7 +166,7 @@ class InvalidOAuth2Flow(OAuthTestBase):
             'code': 'some_invalid_code',
             'redirect_uri': self.app.redirect_url,
         }
-        self._do_invalid_token_request(req, 'invalid_grant')
+        self._do_invalid_token_request(req, 400, 'invalid_grant')
 
     def test_noexisting_grant(self):
         """ The auth code is a valid UUID but does not exist """
@@ -172,7 +175,7 @@ class InvalidOAuth2Flow(OAuthTestBase):
             'code': uuid.uuid4().hex,
             'redirect_uri': self.app.redirect_url,
         }
-        self._do_invalid_token_request(req, 'invalid_grant')
+        self._do_invalid_token_request(req, 400, 'invalid_grant')
 
     def test_invalid_scope(self):
         """ Test a request for aninvalid scope """
@@ -192,18 +195,33 @@ class InvalidOAuth2Flow(OAuthTestBase):
         resp = json.loads(response.content.decode('ascii'))
         self.assertEquals(resp['error'], 'invalid_scope')
 
-    def _do_invalid_token_request(self, req, error):
+    def _do_invalid_token_request(self, req, status, error, auth=None):
+        """ Performs an invalid token requests and verifies the result
+
+        If auth is None, the default (correct) authentication information is
+        sent. If no authentication header should be sent, an empty string
+        should be provided instead. """
+
+        if auth is None:
+            auth = app_auth(self.app)
+
+        headers = {}
+
+        if auth:
+            headers['HTTP_AUTHORIZATION'] = auth
+
         token_url = reverse('oauth2:token')
         response = self.client.post(
             token_url,
             urllib.parse.urlencode(req),
             content_type='application/x-www-form-urlencoded',
-            HTTP_AUTHORIZATION=app_auth(self.app),
+            **headers
         )
 
-        self.assertEquals(response.status_code, 400)
+        self.assertEquals(response.status_code, status)
         resp = json.loads(response.content.decode('ascii'))
         self.assertEquals(resp['error'], error)
+        return response
 
 
 def app_auth(app):
