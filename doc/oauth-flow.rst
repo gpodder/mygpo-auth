@@ -2,14 +2,7 @@ OAuth Flow
 ==========
 
 
-1. Register Client
-------------------
-
-Register your client using this `form <http://goo.gl/forms/jh22QND9y3>`_. You
-will receive a client ID and a client secret.
-
-
-2. Redirect users to Authorization page
+1. Redirect users to Authorization page
 ---------------------------------------
 
 Redirect your users to the gpodder.net authorization page at
@@ -21,8 +14,8 @@ with the following query parameters
 ================ ==============================================================
 Name             Description
 ================ ==============================================================
-``client_id``    The client ID you received when registering your app (see step
-                 1).
+``client_id``    The client ID you received when registering your app (see
+                 :doc:`register`).
 ``redirect_uri`` The URL to which the user should be redirected after
                  authorization.
 ``scope``        A space-delimited set of :doc:`scopes` which the app requests.
@@ -31,17 +24,17 @@ Name             Description
 ================ ==============================================================
 
 
-3. User authenticates and authorizes your app
+2. User authenticates and authorizes your app
 ---------------------------------------------
 
 Not implemented yet.
 
 
-4. The user is redirected back
+3. The user is redirected back
 ------------------------------
 
 After successful authorization the user is redirected to the URL that was
-specified during registration of the app (step 1).
+specified during registration of the app (see :doc:`register`).
 
 To the URL the following query parameters will be appended.
 
@@ -55,7 +48,7 @@ Name         Description
 ============ ==================================================================
 
 
-5. Get Access and Refresh Token
+4. Get Access and Refresh Token
 -------------------------------
 
 You can now request an access and refresh token that can be used to access the
@@ -75,10 +68,10 @@ The request should contain the following parameters using the
 Name           Description
 ============== ==================================================================
 ``grant_type`` The string ``authorization_code``, indicating that an
-               authorization code (from step 4) is exchanged for tokens
+               authorization code (from step 3) is exchanged for tokens
 ``code``       The ``code`` value from the redirect
-``client_id``  The client ID you received when registering your app (see step
-               1).
+``client_id``  The client ID you received when registering your app (see
+               :doc:`register`)
 ============== ==================================================================
 
 The request should include an ``Accept: application/json`` header.
@@ -95,17 +88,17 @@ The ``scope`` attribute contains the list of granted scopes.
        "token_type": "bearer",
        "expires_in": 3600,
        "refresh_token": "tGzv3JOkF0XG5Qx2TlKWIA",
-       "scope": " "
+       "scope": "subscriptions suggestions"
      }
 
 
-6. Accessing API endpoints
+5. Accessing API endpoints
 --------------------------
 
 Not implemented yet
 
 
-7. Renew tokens
+6. Renew tokens
 ---------------
 
 The access token has a relatively short expiration time. When the token is
@@ -120,8 +113,8 @@ Name              Description
 ================= =============================================================
 ``grant_type``    The string ``refresh_token``, indicating that a refresh token
                   is used to retrieve new tokens
-``refresh_token`` The refresh_token (from step 5).
+``refresh_token`` The refresh_token (from step 4).
 ``client_id``     The client ID you received when registering your app (see
-                  step 1).
+                  :doc:`register`).
 ================= =============================================================
 

@@ -25,19 +25,13 @@ The Test instance uses the following endpoints:
 * `Token Endpoint <http://tools.ietf.org/html/rfc6749#section-3.2>`_:
   ``https://mygpo-auth-test.herokuapp.com/oauth2/token``
 
-
-Register a Client Application
------------------------------
-
-To register a new client application, please fill out this `form
-<http://goo.gl/forms/jh22QND9y3>`_.
-
-
-**Contents**
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
 
+   register
    oauth-flow
    scopes
    RFC 6749 <http://tools.ietf.org/html/rfc6749>
