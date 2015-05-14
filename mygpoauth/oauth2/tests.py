@@ -10,8 +10,8 @@ from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
 
 
-class OAuth2Flow(TestCase):
-    """ Test the OAuth flow """
+class OAuthTestBase(TestCase):
+    """ Provides test data for OAuth tests """
 
     def setUp(self):
         self.app = Application.objects.create(
@@ -28,6 +28,10 @@ class OAuth2Flow(TestCase):
         Authorization.objects.filter(application=self.app).delete()
         self.app.delete()
         self.user.delete()
+
+
+class OAuth2Flow(OAuthTestBase):
+    """ Test the OAuth flow """
 
     def test_login(self):
         """ Test a successful login """
@@ -83,7 +87,7 @@ class OAuth2Flow(TestCase):
             token_url,
             urllib.parse.urlencode(req),
             content_type='application/x-www-form-urlencoded',
-            HTTP_AUTHORIZATION=self.app_auth(),
+            HTTP_AUTHORIZATION=app_auth(self.app),
         )
 
         self.assertEquals(response.status_code, 200, response.content)
@@ -102,6 +106,10 @@ class OAuth2Flow(TestCase):
         token_url = reverse('oauth2:token')
         response = self.client.options(token_url)
         self.assertEqual(response['Access-Control-Allow-Origin'], '*')
+
+
+class InvalidOAuth2Flow(OAuthTestBase):
+    """ Test various error cases during the OAuth flow """
 
     def test_missing_token_auth(self):
         """ Test missing Basic Auth for Token Endpoint """
@@ -180,15 +188,16 @@ class OAuth2Flow(TestCase):
             token_url,
             urllib.parse.urlencode(req),
             content_type='application/x-www-form-urlencoded',
-            HTTP_AUTHORIZATION=self.app_auth(),
+            HTTP_AUTHORIZATION=app_auth(self.app),
         )
 
         self.assertEquals(response.status_code, 400)
         resp = json.loads(response.content.decode('ascii'))
         self.assertEquals(resp['error'], error)
 
-    def app_auth(self):
-        return create_auth_string(self.app.client_id, self.app.client_secret)
+
+def app_auth(app):
+    return create_auth_string(app.client_id, app.client_secret)
 
 
 def create_auth_string(username, password):
