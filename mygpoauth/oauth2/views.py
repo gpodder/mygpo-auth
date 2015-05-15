@@ -17,7 +17,7 @@ from mygpoauth.authorization.scope import (parse_scopes, ScopeError,
                                            validate_scope)
 from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
                          InvalidGrant, InvalidRequest, InvalidScope,
-                         InvalidClient, UnsupportedResponseType)
+                         InvalidClient, UnsupportedResponseType, AccessDenied)
 
 
 def cors(f):
@@ -163,6 +163,10 @@ class AuthorizeView(TemplateView):
     def _get_authorized_scopes(self, request):
         """ Get the scopes that have been authorized by the user """
         for key, value in request.POST.items():
+
+            if key == 'btn:deny':
+                raise AccessDenied
+
             if not (key.startswith('scope:') and value == 'on'):
                 continue
 

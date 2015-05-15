@@ -83,3 +83,10 @@ class UnsupportedResponseType(OAuthError):
             .format(response_type=response_type))
 
     error = 'unsupported_response_type'
+
+
+class AccessDenied(OAuthError):
+    """ The resource owner or authorization server denied the request. """
+
+    error = 'access_denied'
+    error_description = 'The access has been denied'

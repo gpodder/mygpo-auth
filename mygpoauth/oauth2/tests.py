@@ -192,6 +192,26 @@ class OAuth2Flow(OAuthTestBase):
         self.assertEqual(response['Access-Control-Allow-Origin'], '*')
 
 
+class InvalidOAuthFlows(OAuthTestBase):
+
+    def test_deny(self):
+        """ Perform an authorization for the given scopes """
+        scopes = ['subscriptions', 'apps:get']
+        auth_url = self._get_auth_url(scopes)
+        response = self._auth_request(auth_url)
+        response = self._auth_form_deny(auth_url, scopes)
+        response = self._follow_redirects(response,
+                                          'https://example.com/test.+')
+        self._verify_redirect_params(response, error='access_denied')
+
+    def _auth_form_deny(self, auth_url, scopes):
+        """ Fill the authorization form, ie grant the given scopes """
+        form_fields = {'scope:' + scope: 'on' for scope in scopes}
+        # assume there are other (non-scope) inputs in the form, eg csrf_token
+        form_fields.update({'btn:deny': ''})
+        return self.client.post(auth_url, form_fields, follow=False)
+
+
 class InvalidTokenRequests(OAuthTestBase):
     """ Test invalid requests to token endpoint """
 
