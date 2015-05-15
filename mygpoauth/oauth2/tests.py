@@ -37,15 +37,21 @@ class OAuthTestBase(TestCase):
         self.app.delete()
         self.user.delete()
 
-    def _get_auth_url(self, scopes, response_type='code', state='some_state'):
+    def _get_auth_url(self, scopes, response_type='code', state='some_state',
+                      trigger_error=False):
         auth_url = reverse('oauth2:authorize')
 
-        query = urllib.parse.urlencode([
+        params = [
             ('client_id', self.app.client_id),
             ('response_type', response_type),
             ('state', state),
             ('scope', ' '.join(scopes)),
-        ])
+        ]
+
+        if trigger_error:
+            params.append(('trigger_error', 'true'))
+
+        query = urllib.parse.urlencode(params)
         return auth_url + '?' + query
 
     def _auth_request(self, auth_url):
@@ -303,10 +309,15 @@ class InvalidAuthRequests(OAuthTestBase):
         self._do_invalid_auth_request(response_type='magic_response',
                                       error='unsupported_response_type')
 
+    def test_server_error(self):
+        """ Cause a test server error """
+        self._do_invalid_auth_request(trigger_error=True, error='server_error')
+
     def _do_invalid_auth_request(self, response_type='code', scopes=[],
-                                 error=''):
+                                 error='', trigger_error=False):
         """ Perform an invalid auth request """
-        auth_url = self._get_auth_url(scopes, response_type)
+        auth_url = self._get_auth_url(scopes, response_type,
+                                      trigger_error=trigger_error)
         # Verify that the Authorization server redirects back correctly
         response = self.client.get(auth_url, follow=False)
         self._verify_redirect_params(response, error=error)

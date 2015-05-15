@@ -17,7 +17,8 @@ from mygpoauth.authorization.scope import (parse_scopes, ScopeError,
                                            validate_scope)
 from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
                          InvalidGrant, InvalidRequest, InvalidScope,
-                         InvalidClient, UnsupportedResponseType, AccessDenied)
+                         InvalidClient, UnsupportedResponseType, AccessDenied,
+                         ServerError)
 
 
 def cors(f):
@@ -79,10 +80,19 @@ class AuthorizeView(TemplateView):
     template_name = "authorization/authorize.html"
 
     def dispatch(self, request, *args, **kwargs):
-        app_id = request.GET.get('client_id')
-        app = get_object_or_404(Application, client_id=app_id)
         try:
-            return super().dispatch(request, app, *args, **kwargs)
+            app_id = request.GET.get('client_id')
+            app = get_object_or_404(Application, client_id=app_id)
+
+            try:
+                self._check_trigger_error(request)
+                return super().dispatch(request, app, *args, **kwargs)
+
+            except OAuthError:
+                raise  # pass on OAuthErrors to outer "except"
+
+            except:
+                raise ServerError  # convert other errors to ServerError
 
         except OAuthError as e:
             return self._error_redirect(app, e)
@@ -195,6 +205,11 @@ class AuthorizeView(TemplateView):
             return parse_scopes(scope_str)
         except ScopeError as se:
             raise InvalidScope(str(se))
+
+    def _check_trigger_error(self, request):
+        """ For test purposes trigger_error=true triggers a server error """
+        if request.GET.get('trigger_error') == 'true':
+            raise Exception
 
 
 class TokenView(View):

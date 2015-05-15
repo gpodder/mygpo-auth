@@ -90,3 +90,13 @@ class AccessDenied(OAuthError):
 
     error = 'access_denied'
     error_description = 'The access has been denied'
+
+
+class ServerError(OAuthError):
+    """ The authorization server encountered an unexpected condition that
+    prevented it from fulfilling the request.  (This error code is needed
+    because a 500 Internal Server Error HTTP status code cannot be returned to
+    the client via an HTTP redirect.) """
+
+    error = 'server_error'
+    error_description = 'An unknown error occured'
