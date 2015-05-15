@@ -1,0 +1,37 @@
+<html>
+<body>
+
+{{app.name}} requests the following permissions.
+
+<form action="" method="post">
+
+{% csrf_token %}
+
+It already has the following permissions:
+
+<ul>
+{% for scope in authorization.scopes %}
+ <li>
+  <input name="scope:{{ scope }}" type="checkbox" checked="checked" />
+  {{ scope }}
+ </li>
+{% endfor %}
+</ul>
+
+It requests the following new scopes:
+
+<ul>
+{% for scope in new_scopes %}
+ <li>
+  <input name="scope:{{ scope }}" type="checkbox" checked="checked" />
+  {{ scope }}
+ </li>
+{% endfor %}
+</ul>
+
+<button type="submit">OK</button>
+
+</form>
+
+</body>
+</html>

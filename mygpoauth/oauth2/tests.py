@@ -3,6 +3,7 @@ import uuid
 import string
 import json
 import random
+import re
 
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
@@ -36,58 +37,68 @@ class OAuthTestBase(TestCase):
         self.app.delete()
         self.user.delete()
 
-
-class OAuth2Flow(OAuthTestBase):
-    """ Test the OAuth flow """
-
-    def test_login(self):
-        """ Test a successful login """
+    def _get_auth_url(self, scopes, response_type='code', state='some_state'):
         auth_url = reverse('oauth2:authorize')
 
         query = urllib.parse.urlencode([
             ('client_id', self.app.client_id),
-            ('response_type', 'code'),
-            ('state', 'some_state'),
-            ('scope', 'subscriptions apps:get'),
+            ('response_type', response_type),
+            ('state', state),
+            ('scope', ' '.join(scopes)),
         ])
+        return auth_url + '?' + query
 
-        # Verify that the Authorization server redirects back correctly
-        response = self.client.get(auth_url + '?' + query, follow=False)
-        self.assertEquals(response.status_code, 302)
+    def _auth_request(self, auth_url):
+        """ Perform the request to the authorization endpoint """
+        return self.client.get(auth_url)
 
-        redir_url = response['Location']
-        urlparts = urllib.parse.urlsplit(redir_url)
-        scheme, netloc, path, query, fragment = urlparts
-        self.assertEquals(scheme, 'https')
-        self.assertEquals(netloc, 'example.com')
-        self.assertEquals(path, '/test')
-        self.assertEquals(fragment, '')
+    def _follow_redirects(self, response, location_pattern, max_redirects=10):
+        """ Follow redirects until one directs to location_pattern """
+        for n in range(max_redirects):
+            self.assertEquals(response.status_code, 302)
+            url = response['Location']
+            if re.fullmatch(location_pattern, url):
+                break
+            response = self.client.get(url, follow=False)
+        else:
+            raise Exception('Max redirects reached')
 
-        queries = urllib.parse.parse_qs(query)
-        self.assertEquals(queries['test'], ['true'],)
-        self.assertEquals(queries['state'], ['some_state'])
+        return response
+
+    def _fill_auth_form(self, auth_url, scopes):
+        """ Fill the authorization form, ie grant the given scopes """
+        form_fields = {'scope:' + scope: 'on' for scope in scopes}
+        # assume there are other (non-scope) inputs in the form, eg csrf_token
+        form_fields.update(other_field='some_value')
+        return self.client.post(auth_url, form_fields, follow=False)
+
+    def _catch_redirect(self, response):
+        """ Extract the "code" field from the redirect """
+        queries = self._verify_redirect_params(response, state='some_state')
         self.assertIn('code', queries.keys())
         self.assertEquals(len(queries['code']), 1)
-
         code = queries['code'][0]
+        return code
 
-        # Request access token from authorization_code
+    def _tokens_from_auth_code(self, code, scopes):
+        """ Request access token from authorization_code """
         req = {
             'grant_type': 'authorization_code',
             'code': code,
             'redirect_uri': self.app.redirect_url,
         }
-        resp = self.token_request(req, True)
+        resp = self._token_request(req, set(scopes))
+        return resp
 
-        # Request access token from refresh_token
-        refresh_token = resp['refresh_token']
+    def _tokens_from_refresh_token(self, refresh_token):
+        """ Request access token from refresh_token """
         req = {
             'grant_type': 'refresh_token',
             'refresh_token': refresh_token,
         }
-        resp = self.token_request(req, False)  # no real scopes provided yet
+        resp = self._token_request(req, None)  # no real scopes provided yet
 
-    def token_request(self, req, validate_scopes):
+    def _token_request(self, req, scopes):
         """ Carry out (and verify) a successful token request """
         token_url = reverse('oauth2:token')
         response = self.client.post(
@@ -112,11 +123,67 @@ class OAuth2Flow(OAuthTestBase):
         self.assertEquals(response['Cache-Control'], 'no-store')
         self.assertEquals(response['Pragma'], 'no-cache')
 
-        if validate_scopes:
-            self.assertEquals(set(resp['scope'].split()),
-                              {'subscriptions', 'apps:get'})
+        if scopes is not None:
+            self.assertEquals(set(resp['scope'].split()), set(scopes))
         self.assertIn('expires_in', resp)
         return resp
+
+    def _verify_redirect_params(self, resp, **params):
+        """ Verify that the expected params were included in the redirect """
+        self.assertEquals(resp.status_code, 302)
+
+        redir_url = resp['Location']
+        urlparts = urllib.parse.urlsplit(redir_url)
+        scheme, netloc, path, query, fragment = urlparts
+        self.assertEquals(scheme, 'https')
+        self.assertEquals(netloc, 'example.com')
+        self.assertEquals(path, '/test')
+        self.assertEquals(fragment, '')
+
+        queries = urllib.parse.parse_qs(query)
+        self.assertEquals(queries['test'], ['true'],)
+
+        for param, value in params.items():
+            self.assertEquals(queries[param], [value])
+
+        return queries
+
+
+class OAuth2Flow(OAuthTestBase):
+    """ Test the OAuth flow """
+
+    def test_login(self):
+        """ Test a successful login """
+        SCOPES = ['subscriptions', 'apps:get']
+
+        self._perform_auth(SCOPES)
+
+    def test_login_extend_scopes(self):
+        """ Auth with scopes first, extend scopes for 2nd auth """
+        SCOPES = ['subscriptions', 'apps:get']
+        self._perform_auth(SCOPES)
+        self._perform_auth(SCOPES + ['app:1234'])
+
+    def test_login_same_scopes(self):
+        """ Auth with same scopes twice, no login page showed on 2nd time """
+        SCOPES = ['subscriptions', 'apps:get']
+        self._perform_auth(SCOPES)
+        self._perform_auth(SCOPES, expect_auth_page=False)
+
+    def _perform_auth(self, scopes, expect_auth_page=True):
+        """ Perform an authorization for the given scopes """
+        auth_url = self._get_auth_url(scopes)
+        response = self._auth_request(auth_url)
+
+        if expect_auth_page:
+            response = self._fill_auth_form(auth_url, scopes)
+
+        response = self._follow_redirects(response,
+                                          'https://example.com/test.+')
+
+        code = self._catch_redirect(response)
+        resp = self._tokens_from_auth_code(code, scopes)
+        self._tokens_from_refresh_token(resp['refresh_token'])
 
     def test_cors(self):
         """ Test CORS headers """
@@ -218,38 +285,30 @@ class InvalidAuthRequests(OAuthTestBase):
 
     def test_invalid_scope(self):
         """ Test a request for aninvalid scope """
-        self._do_invalid_auth_request(scope='invalid scope',
+        self._do_invalid_auth_request(scopes=['invalid scope'],
                                       error='invalid_scope')
 
     def test_invalid_response_type(self):
+        """ Test a request with an invalid response type """
         self._do_invalid_auth_request(response_type='magic_response',
                                       error='unsupported_response_type')
 
-    def _do_invalid_auth_request(self, response_type='code', scope='',
-                                 status=400, error=''):
-        auth_url = reverse('oauth2:authorize')
-
-        query = urllib.parse.urlencode([
-            ('client_id', self.app.client_id),
-            ('response_type', response_type),
-            ('state', 'some_state'),
-            ('scope', scope),
-        ])
-
+    def _do_invalid_auth_request(self, response_type='code', scopes=[],
+                                 error=''):
+        """ Perform an invalid auth request """
+        auth_url = self._get_auth_url(scopes, response_type)
         # Verify that the Authorization server redirects back correctly
-        response = self.client.get(auth_url + '?' + query, follow=False)
-
-        self.assertEquals(response.status_code, status)
-        resp = json.loads(response.content.decode('ascii'))
-        self.assertEquals(resp['error'], error)
-        return response
+        response = self.client.get(auth_url, follow=False)
+        self._verify_redirect_params(response, error=error)
 
 
 def app_auth(app):
+    """ Create the authorization string for the given app """
     return create_auth_string(app.client_id, app.client_secret)
 
 
 def create_auth_string(username, password):
+    """ Create a Basic Auth string for the given credentials """
     import base64
     credentials = ("%s:%s" % (username, password)).encode('ascii')
     credentials = base64.b64encode(credentials).decode('ascii')

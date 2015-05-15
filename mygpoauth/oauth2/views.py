@@ -4,7 +4,7 @@ import urllib.parse
 from functools import wraps
 
 from django import http
-from django.views.generic.base import View
+from django.views.generic.base import View, TemplateView
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_control
@@ -13,35 +13,11 @@ from django.contrib.auth.decorators import login_required
 
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
-from mygpoauth.authorization.scope import parse_scopes, ScopeError
+from mygpoauth.authorization.scope import (parse_scopes, ScopeError,
+                                           validate_scope)
 from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
                          InvalidGrant, InvalidRequest, InvalidScope,
                          InvalidClient, UnsupportedResponseType)
-
-
-class OAuthView(View):
-    """ The base view for the OAuth endpoints
-
-    http://tools.ietf.org/html/rfc6749#section-3 """
-
-    def dispatch(self, request, *args, **kwargs):
-        try:
-            return super().dispatch(request, *args, **kwargs)
-
-        except InvalidClient as ic:
-            resp = http.JsonResponse(self._error_obj(ic), status=401)
-            auth_header = 'Basic realm="{realm}"'.format(realm=ic.realm)
-            resp['WWW-Authenticate'] = auth_header
-            return resp
-
-        except OAuthError as e:
-            return http.JsonResponse(self._error_obj(e), status=400)
-
-    def _error_obj(self, exc):
-        return {
-            'error': exc.error,
-            'error_description': exc.error_description,
-        }
 
 
 def cors(f):
@@ -95,59 +71,129 @@ def require_application(realm):
     return _decorator
 
 
-class AuthorizeView(OAuthView):
+class AuthorizeView(TemplateView):
     """ The Authorization Endpoint
 
     http://tools.ietf.org/html/rfc6749#section-3.1 """
 
+    template_name = "authorization/authorize.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        app_id = request.GET.get('client_id')
+        app = get_object_or_404(Application, client_id=app_id)
+        try:
+            return super().dispatch(request, app, *args, **kwargs)
+
+        except OAuthError as e:
+            return self._error_redirect(app, e)
+
     @method_decorator(login_required)
-    def get(self, request, *args, **kwargs):
+    def get(self, request, app, *args, **kwargs):
+        """ Show app authorization page """
+        response_type = self._get_response_type(request)
+        state = self._get_state(request)
+        scopes = self._get_scopes(request)
 
-        client_id = request.GET.get('client_id')
-        application = get_object_or_404(Application, client_id=client_id)
+        authorization = Authorization.objects.filter(
+            user=request.user,
+            application=app,
+        ).first()
 
+        new_scopes = self._get_new_scopes(authorization, scopes)
+
+        if not new_scopes:
+            return self._success_redirect(app, authorization, state)
+
+        return self.render_to_response({
+            'app': app,
+            'authorization': authorization,
+            'new_scopes': new_scopes,
+        })
+
+    def post(self, request, app):
+        """ Validate granted scopes """
+        state = self._get_state(request)
+
+        scopes = self._get_authorized_scopes(request)
+
+        auth, created = Authorization.objects.update_or_create(
+            user=request.user,
+            application=app,
+            defaults={
+                'scopes': list(scopes),
+            }
+        )
+
+        return self._success_redirect(app, auth, state)
+
+    def _success_redirect(self, app, authorization, state):
+        """ Redirect to App's redirect_uri for successful case """
+        redir_url = self._build_redirect_url(app, [
+            ('code', authorization.code.hex),
+            ('state', state)
+        ])
+        return http.HttpResponseRedirect(redir_url)
+
+    def _error_redirect(self, app, err):
+        """ Redirect to App's redirect_uri for error case """
+        redir_url = self._build_redirect_url(app, [
+            ('error', err.error),
+            ('error_description', err.error_description),
+        ])
+        return http.HttpResponseRedirect(redir_url)
+
+    def _build_redirect_url(self, application, params):
+        """ Build the URL for redirecting back to app """
+        url_parts = urllib.parse.urlsplit(application.redirect_url)
+        scheme, netloc, path, query, fragment = url_parts
+
+        queries = urllib.parse.parse_qsl(query)
+        query = urllib.parse.urlencode(queries + params)
+
+        url_parts = (scheme, netloc, path, query, fragment)
+        return urllib.parse.urlunsplit(url_parts)
+
+    def _get_new_scopes(self, authorization, scopes):
+        """ The set of scopes that has not bene authorized before """
+        if authorization is None:
+            return scopes
+
+        return {scope for scope in scopes if scope not in authorization.scopes}
+
+    def _get_authorized_scopes(self, request):
+        """ Get the scopes that have been authorized by the user """
+        for key, value in request.POST.items():
+            if not (key.startswith('scope:') and value == 'on'):
+                continue
+
+            scope = key[len('scope:'):]
+            validate_scope(scope)
+            yield scope
+
+    def _get_response_type(self, request):
+        """ Get the "response_type" from the query parameters """
         response_type = request.GET.get('response_type')
 
         # http://tools.ietf.org/html/rfc6749#section-3.1.1
         if response_type != 'code':
             raise UnsupportedResponseType(response_type)
 
-        # if present it is included in the redirect url
-        state = request.GET.get('state', '')
+        return response_type
 
+    def _get_state(self, request):
+        """ Get the "state" from the query parameters """
+        return request.GET.get('state', '')
+
+    def _get_scopes(self, request):
+        """ Get the "scope" from the query parameters """
+        scope_str = request.GET.get('scope', '')
         try:
-            scopes = parse_scopes(request.GET.get('scope', ''))
+            return parse_scopes(scope_str)
         except ScopeError as se:
             raise InvalidScope(str(se))
 
-        auth, created = Authorization.objects.update_or_create(
-            user=request.user,
-            application=application,
-            defaults={
-                'scopes': list(scopes),
-            }
-        )
 
-        # authorization token
-        # code=n96wRPxkqNMQ579UFCCrLNlGpt7mok&state=random_state_string
-        code = auth.code.hex
-
-        redir_url = self.build_redirect_url(application, code, state)
-        return http.HttpResponseRedirect(redir_url)
-
-    def build_redirect_url(self, application, code, state):
-        url_parts = urllib.parse.urlsplit(application.redirect_url)
-        scheme, netloc, path, query, fragment = url_parts
-
-        queries = urllib.parse.parse_qsl(query)
-        query = urllib.parse.urlencode(queries +
-                                       [('code', code), ('state', state)])
-
-        url_parts = (scheme, netloc, path, query, fragment)
-        return urllib.parse.urlunsplit(url_parts)
-
-
-class TokenView(OAuthView):
+class TokenView(View):
     """ The Token Endpoint
 
     http://tools.ietf.org/html/rfc6749#section-3.2 """
@@ -156,9 +202,19 @@ class TokenView(OAuthView):
     @method_decorator(cors)
     @method_decorator(cache_control(no_store=True))
     def dispatch(self, request, *args, **kwargs):
-        response = super(TokenView, self).dispatch(request, *args, **kwargs)
-        response['Pragma'] = 'no-cache'
-        return response
+        try:
+            response = super().dispatch(request, *args, **kwargs)
+            response['Pragma'] = 'no-cache'
+            return response
+
+        except InvalidClient as ic:
+            resp = http.JsonResponse(self._error_obj(ic), status=401)
+            auth_header = 'Basic realm="{realm}"'.format(realm=ic.realm)
+            resp['WWW-Authenticate'] = auth_header
+            return resp
+
+        except OAuthError as e:
+            return http.JsonResponse(self._error_obj(e), status=400)
 
     def options(self, request):
         return http.HttpResponse('')
@@ -208,6 +264,12 @@ class TokenView(OAuthView):
             raise UnsupportedGrantType(grant_type)
 
         return http.JsonResponse(resp)
+
+    def _error_obj(self, exc):
+        return {
+            'error': exc.error,
+            'error_description': exc.error_description,
+        }
 
     def _get_code(self, req):
         """ Returns the "code" value from the request """
