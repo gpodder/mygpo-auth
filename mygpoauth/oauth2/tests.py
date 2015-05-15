@@ -90,14 +90,6 @@ class OAuthTestBase(TestCase):
         resp = self._token_request(req, set(scopes))
         return resp
 
-    def _tokens_from_refresh_token(self, refresh_token):
-        """ Request access token from refresh_token """
-        req = {
-            'grant_type': 'refresh_token',
-            'refresh_token': refresh_token,
-        }
-        resp = self._token_request(req, None)  # no real scopes provided yet
-
     def _token_request(self, req, scopes):
         """ Carry out (and verify) a successful token request """
         token_url = reverse('oauth2:token')
@@ -110,7 +102,6 @@ class OAuthTestBase(TestCase):
 
         self.assertEquals(response.status_code, 200, response.content)
         resp = json.loads(response.content.decode('ascii'))
-        self.assertIn('refresh_token', resp)
         self.assertEquals(resp['token_type'], 'Bearer')
         self.assertIn('access_token', resp)
 
@@ -183,7 +174,6 @@ class OAuth2Flow(OAuthTestBase):
 
         code = self._catch_redirect(response)
         resp = self._tokens_from_auth_code(code, scopes)
-        self._tokens_from_refresh_token(resp['refresh_token'])
 
     def test_cors(self):
         """ Test CORS headers """

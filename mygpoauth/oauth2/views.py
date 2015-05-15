@@ -227,45 +227,16 @@ class TokenView(View):
     def post(self, request, application):
 
         req = urllib.parse.parse_qs(request.body)
+        grant_type = self._get_grant_type(req)
+        code = self._get_code(req)
+        auth = self._get_auth(code)
 
-        grant_type = req.get(b'grant_type', None)
-        if not grant_type:
-            raise MissingGrantType
-
-        if req[b'grant_type'] == [b'authorization_code']:
-
-            code = self._get_code(req)
-
-            try:
-                auth = Authorization.objects.get(code=code)
-
-            except Authorization.DoesNotExist:
-                raise InvalidGrant
-
-            # {b'grant_type': [b'authorization_code'],
-            #  b'code': [b'asdf'],
-            #  b'redirect_uri': [b'http://django-oauth-toolkit.herokuapp.com/
-            #   consumer/exchange/']}
-            resp = {
-                'refresh_token': 'a',
-                'token_type': 'Bearer',
-                'access_token': 'b',
-                'scope': ' '.join(auth.scopes),
-                'expires_in': 3600,
-            }
-
-        elif req[b'grant_type'] == [b'refresh_token']:
-            # refresh_token
-            resp = {
-                'refresh_token': 'a',
-                'token_type': 'Bearer',
-                'access_token': 'b',
-                'scope': 'read write',
-                'expires_in': 3600,
-            }
-
-        else:
-            raise UnsupportedGrantType(grant_type)
+        resp = {
+            'token_type': 'Bearer',
+            'access_token': 'b',
+            'scope': ' '.join(auth.scopes),
+            'expires_in': 3600,
+        }
 
         return http.JsonResponse(resp)
 
@@ -274,6 +245,22 @@ class TokenView(View):
             'error': exc.error,
             'error_description': exc.error_description,
         }
+
+    def _get_auth(self, code):
+        try:
+            return Authorization.objects.get(code=code)
+        except Authorization.DoesNotExist:
+            raise InvalidGrant
+
+    def _get_grant_type(self, req):
+        grant_type = req.get(b'grant_type', None)
+        if not grant_type:
+            raise MissingGrantType
+
+        if req[b'grant_type'] != [b'authorization_code']:
+            raise UnsupportedGrantType(grant_type)
+
+        return grant_type
 
     def _get_code(self, req):
         """ Returns the "code" value from the request """

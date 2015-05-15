@@ -51,11 +51,11 @@ Name         Description
 ============ ==================================================================
 
 
-4. Get Access and Refresh Token
--------------------------------
+4. Get an Access Token
+----------------------
 
-You can now request an access and refresh token that can be used to access the
-gpodder.net API.
+You can now request an access token that can be used to access the gpodder.net
+API.
 
 To retrieve the tokens, issue a ``POST`` request to
 
@@ -79,8 +79,8 @@ Name           Description
 
 The request should include an ``Accept: application/json`` header.
 
-The response will then contain JSON data with ``access_token`` and
-``refresh_token`` attributes, containing the respective tokens.
+The response will then contain JSON data with a ``access_token``
+attributes.
 
 The ``scope`` attribute contains the list of granted scopes.
 
@@ -90,7 +90,6 @@ The ``scope`` attribute contains the list of granted scopes.
        "access_token": "2YotnFZFEjr1zCsicMWpAA",
        "token_type": "bearer",
        "expires_in": 3600,
-       "refresh_token": "tGzv3JOkF0XG5Qx2TlKWIA",
        "scope": "subscriptions suggestions"
      }
 
@@ -105,19 +104,4 @@ Not implemented yet
 ---------------
 
 The access token has a relatively short expiration time. When the token is
-expired it can be refreshed from the token endpoint using the refresh token.
-
-This request is similar to step 5 with the following exceptions. It should
-contain the following parameters using the
-``application/x-www-form-urlencoded`` format in the body.
-
-================= =============================================================
-Name              Description
-================= =============================================================
-``grant_type``    The string ``refresh_token``, indicating that a refresh token
-                  is used to retrieve new tokens
-``refresh_token`` The refresh_token (from step 4).
-``client_id``     The client ID you received when registering your app (see
-                  :doc:`register`).
-================= =============================================================
-
+expired it can be renewed by repeating step 4.
