@@ -28,3 +28,8 @@ class Authorization(UpdateInfoModel):
     scopes = ArrayField(models.CharField(max_length=36, blank=False))
 
     code = models.UUIDField(default=uuid.uuid4)
+
+    class Meta:
+        unique_together = [
+            ('user', 'application'),
+        ]
