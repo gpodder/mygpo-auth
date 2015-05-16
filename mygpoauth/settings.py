@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 import dj_database_url
 from psycopg2cffi import compat
 
@@ -127,3 +128,6 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 NOSE_ARGS = ['--with-doctest']
 
 LOGIN_URL = 'login:login'
+
+# the default time after which a new token expires
+DEFAULT_TOKEN_EXPIRATION = timedelta(hours=1)

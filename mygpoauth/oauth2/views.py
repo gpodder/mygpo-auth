@@ -6,6 +6,7 @@ from functools import wraps
 from django import http
 from django.views.generic.base import View, TemplateView
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.cache import cache_control
 from django.shortcuts import get_object_or_404
@@ -15,6 +16,7 @@ from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
 from mygpoauth.authorization.scope import (parse_scopes, ScopeError,
                                            validate_scope)
+from .models import AccessToken
 from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
                          InvalidGrant, InvalidRequest, InvalidScope,
                          InvalidClient, UnsupportedResponseType, AccessDenied,
@@ -246,11 +248,16 @@ class TokenView(View):
         code = self._get_code(req)
         auth = self._get_auth(code)
 
+        token = AccessToken.objects.create(
+            authorization=auth,
+            scopes=auth.scopes,
+        )
+
         resp = {
             'token_type': 'Bearer',
-            'access_token': 'b',
+            'access_token': token.token.hex,
             'scope': ' '.join(auth.scopes),
-            'expires_in': 3600,
+            'expires_in': (token.expires - timezone.now()).total_seconds(),
         }
 
         return http.JsonResponse(resp)

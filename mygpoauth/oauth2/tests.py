@@ -5,12 +5,18 @@ import json
 import random
 import re
 
+from freezegun import freeze_time
+
+from django.conf import settings
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
+
+
+ISSUE_TIME = '2015-05-16T13:47:47'
 
 
 class OAuthTestBase(TestCase):
@@ -94,6 +100,15 @@ class OAuthTestBase(TestCase):
             'redirect_uri': self.app.redirect_url,
         }
         resp = self._token_request(req, set(scopes))
+        self.assertEquals(resp['token_type'], 'Bearer')
+
+        # assert that the access_token exists and is a valid UUID
+        token = uuid.UUID(resp['access_token'])
+
+        self.assertEquals(set(scopes), set(resp['scope'].split()))
+
+        self.assertEquals(int(resp['expires_in']),
+                          settings.DEFAULT_TOKEN_EXPIRATION.total_seconds())
         return resp
 
     def _token_request(self, req, scopes):
@@ -149,18 +164,21 @@ class OAuthTestBase(TestCase):
 class OAuth2Flow(OAuthTestBase):
     """ Test the OAuth flow """
 
+    @freeze_time(ISSUE_TIME)
     def test_login(self):
         """ Test a successful login """
         SCOPES = ['subscriptions', 'apps:get']
 
         self._perform_auth(SCOPES)
 
+    @freeze_time(ISSUE_TIME)
     def test_login_extend_scopes(self):
         """ Auth with scopes first, extend scopes for 2nd auth """
         SCOPES = ['subscriptions', 'apps:get']
         self._perform_auth(SCOPES)
         self._perform_auth(SCOPES + ['app:1234'])
 
+    @freeze_time(ISSUE_TIME)
     def test_login_same_scopes(self):
         """ Auth with same scopes twice, no login page showed on 2nd time """
         SCOPES = ['subscriptions', 'apps:get']
