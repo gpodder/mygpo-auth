@@ -199,6 +199,23 @@ class OAuth2Flow(OAuthTestBase):
         code = self._catch_redirect(response)
         resp = self._tokens_from_auth_code(code, scopes)
 
+    @freeze_time(ISSUE_TIME)
+    def test_one_auth_multiple_tokens(self):
+        """ Verify that multiple okens can be issued after an auth """
+        scopes = ['subscriptions', 'apps:get']
+        auth_url = self._get_auth_url(scopes)
+        response = self._auth_request(auth_url)
+        response = self._fill_auth_form(auth_url, scopes)
+        response = self._follow_redirects(response,
+                                          'https://example.com/test.+')
+        code = self._catch_redirect(response)
+
+        # retrieve two tokens for the same authorization
+        resp1 = self._tokens_from_auth_code(code, scopes)
+        resp2 = self._tokens_from_auth_code(code, scopes)
+        # ensure that a new token has been issued the second time
+        self.assertNotEqual(resp1['access_token'], resp2['access_token'])
+
     def test_cors(self):
         """ Test CORS headers """
         token_url = reverse('oauth2:token')
