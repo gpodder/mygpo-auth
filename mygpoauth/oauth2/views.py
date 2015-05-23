@@ -4,6 +4,7 @@ import urllib.parse
 from functools import wraps
 
 from django import http
+from django.core.urlresolvers import reverse
 from django.views.generic.base import View, TemplateView
 from django.utils.decorators import method_decorator
 from django.utils import timezone
@@ -16,6 +17,7 @@ from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
 from mygpoauth.authorization.scope import (parse_scopes, ScopeError,
                                            validate_scope)
+from mygpoauth.utils import get_link_header, Link
 from .models import AccessToken
 from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
                          InvalidGrant, InvalidRequest, InvalidScope,
@@ -260,7 +262,9 @@ class TokenView(View):
             'expires_in': (token.expires - timezone.now()).total_seconds(),
         }
 
-        return http.JsonResponse(resp)
+        response = http.JsonResponse(resp)
+        response['Link'] = get_link_header([TokenInfoLink(token.token.hex)])
+        return response
 
     def _error_obj(self, exc):
         return {
@@ -295,3 +299,43 @@ class TokenView(View):
         except ValueError:
             # code is malformed
             raise InvalidGrant
+
+
+class TokenInfoView(View):
+    """ Return information about an access token """
+
+    def get(self, request, token):
+
+        try:
+            token = AccessToken.objects.filter(token=token)\
+                               .select_related('authorization',
+                                               'authorization__application',
+                                               'authorization__user')\
+                               .get()
+        except (ValueError, AccessToken.DoesNotExist):
+            # ValueError is raised if the token is not a valid UUID
+            return http.JsonResponse({}, status=404)
+
+        return http.JsonResponse({
+            'scopes': token.scopes,
+            'token': token.token.hex,
+            'app': {
+                'url': None,
+                'name': token.authorization.application.name,
+                'client_id': token.authorization.application.client_id,
+            },
+            'created_at': token.created,
+            'user': {
+                'login': token.authorization.user.username,
+            }
+        })
+
+
+class TokenInfoLink(Link):
+    """ A HTTP Link header referring to the token-info endpoint """
+
+    RELATION = 'https://gpodder.net/relation/token-info'
+
+    def __new__(cls, token):
+        target = reverse('oauth2:token-info', args=[token])
+        return super().__new__(cls, target, cls.RELATION)

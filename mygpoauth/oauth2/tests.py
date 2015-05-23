@@ -16,7 +16,7 @@ from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
 
 
-ISSUE_TIME = '2015-05-16T13:47:47'
+ISSUE_TIME = '2015-05-16T13:47:47Z'
 
 
 class OAuthTestBase(TestCase):
@@ -135,6 +135,15 @@ class OAuthTestBase(TestCase):
         self.assertEquals(response['Cache-Control'], 'no-store')
         self.assertEquals(response['Pragma'], 'no-cache')
 
+        # Verify that the response contains a Link header (RFC 5988) pointing
+        # to the token-info URL
+        token = resp['access_token']
+        token_info_url = reverse('oauth2:token-info', args=(token,))
+        link = '<{target}>; rel="https://gpodder.net/relation/token-info"'\
+               .format(target=token_info_url)
+        links = response['Link'].split(',')
+        self.assertIn(link, links)
+
         if scopes is not None:
             self.assertEquals(set(resp['scope'].split()), set(scopes))
         self.assertIn('expires_in', resp)
@@ -159,6 +168,28 @@ class OAuthTestBase(TestCase):
             self.assertEquals(queries[param], [value])
 
         return queries
+
+    def _get_token_info(self, token, status=200):
+        info_url = reverse('oauth2:token-info', args=[token])
+        response = self.client.get(info_url)
+        self.assertEquals(response.status_code, status, response.content)
+        resp = json.loads(response.content.decode('ascii'))
+        return resp
+
+    def _perform_auth(self, scopes, expect_auth_page=True):
+        """ Perform an authorization for the given scopes """
+        auth_url = self._get_auth_url(scopes)
+        response = self._auth_request(auth_url)
+
+        if expect_auth_page:
+            response = self._fill_auth_form(auth_url, scopes)
+
+        response = self._follow_redirects(response,
+                                          'https://example.com/test.+')
+
+        code = self._catch_redirect(response)
+        resp = self._tokens_from_auth_code(code, scopes)
+        return resp
 
 
 class OAuth2Flow(OAuthTestBase):
@@ -185,20 +216,6 @@ class OAuth2Flow(OAuthTestBase):
         self._perform_auth(SCOPES)
         self._perform_auth(SCOPES, expect_auth_page=False)
 
-    def _perform_auth(self, scopes, expect_auth_page=True):
-        """ Perform an authorization for the given scopes """
-        auth_url = self._get_auth_url(scopes)
-        response = self._auth_request(auth_url)
-
-        if expect_auth_page:
-            response = self._fill_auth_form(auth_url, scopes)
-
-        response = self._follow_redirects(response,
-                                          'https://example.com/test.+')
-
-        code = self._catch_redirect(response)
-        resp = self._tokens_from_auth_code(code, scopes)
-
     @freeze_time(ISSUE_TIME)
     def test_one_auth_multiple_tokens(self):
         """ Verify that multiple okens can be issued after an auth """
@@ -221,6 +238,28 @@ class OAuth2Flow(OAuthTestBase):
         token_url = reverse('oauth2:token')
         response = self.client.options(token_url)
         self.assertEqual(response['Access-Control-Allow-Origin'], '*')
+
+
+class TokenInfo(OAuthTestBase):
+    """ Tests the Token Info Endpoint """
+
+    @freeze_time(ISSUE_TIME)
+    def test_token_info(self):
+        """ Verify that the token info returns correct data """
+        SCOPES = ['subscriptions', 'apps:get']
+        token = self._perform_auth(SCOPES)['access_token']
+        info = self._get_token_info(token)
+
+        self.assertCountEqual(info['scopes'], SCOPES)
+        self.assertEquals(info['token'], token)
+        self.assertEquals(info['app']['url'], None)
+        self.assertEquals(info['app']['name'], self.app.name)
+        self.assertEquals(info['app']['client_id'], self.app.client_id)
+        self.assertEquals(info['created_at'], ISSUE_TIME)
+        self.assertEquals(info['user']['login'], self.user.username)
+
+    def test_nonexisting_token(self):
+        self._get_token_info('doesnotexist', status=404)
 
 
 class InvalidOAuthFlows(OAuthTestBase):
