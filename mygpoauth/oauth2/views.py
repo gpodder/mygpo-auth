@@ -304,6 +304,7 @@ class TokenView(View):
 class TokenInfoView(View):
     """ Return information about an access token """
 
+    @method_decorator(cache_control(no_store=True))
     def get(self, request, token):
 
         try:
@@ -316,7 +317,7 @@ class TokenInfoView(View):
             # ValueError is raised if the token is not a valid UUID
             return http.JsonResponse({}, status=404)
 
-        return http.JsonResponse({
+        response = http.JsonResponse({
             'scopes': token.scopes,
             'token': token.token.hex,
             'app': {
@@ -329,6 +330,8 @@ class TokenInfoView(View):
                 'login': token.authorization.user.username,
             }
         })
+        response['Pragma'] = 'no-cache'
+        return response
 
 
 class TokenInfoLink(Link):
