@@ -111,9 +111,17 @@ class OAuthTestBase(TestCase):
                           settings.DEFAULT_TOKEN_EXPIRATION.total_seconds())
         return resp
 
+    def _get_token_url(self, scopes):
+        params = [
+            ('scope', ' '.join(scopes)),
+        ]
+        query = urllib.parse.urlencode(params)
+        return reverse('oauth2:token') + '?' + query
+
     def _token_request(self, req, scopes):
         """ Carry out (and verify) a successful token request """
-        token_url = reverse('oauth2:token')
+        token_url = self._get_token_url(scopes)
+
         response = self.client.post(
             token_url,
             urllib.parse.urlencode(req),
@@ -190,6 +198,34 @@ class OAuthTestBase(TestCase):
         code = self._catch_redirect(response)
         resp = self._tokens_from_auth_code(code, scopes)
         return resp
+
+    def _do_invalid_token_request(self, req, scopes, status, error, auth=None):
+        """ Performs an invalid token requests and verifies the result
+
+        If auth is None, the default (correct) authentication information is
+        sent. If no authentication header should be sent, an empty string
+        should be provided instead. """
+
+        if auth is None:
+            auth = app_auth(self.app)
+
+        headers = {}
+
+        if auth:
+            headers['HTTP_AUTHORIZATION'] = auth
+
+        token_url = self._get_token_url(scopes)
+        response = self.client.post(
+            token_url,
+            urllib.parse.urlencode(req),
+            content_type='application/x-www-form-urlencoded',
+            **headers
+        )
+
+        self.assertEquals(response.status_code, status)
+        resp = json.loads(response.content.decode('ascii'))
+        self.assertEquals(resp['error'], error)
+        return response
 
 
 class OAuth2Flow(OAuthTestBase):
@@ -281,6 +317,23 @@ class InvalidOAuthFlows(OAuthTestBase):
         form_fields.update({'btn:deny': ''})
         return self.client.post(auth_url, form_fields, follow=False)
 
+    def test_token_excess_scope(self):
+        """ Authorize for some scopes, request token for other/more """
+        scopes1 = ['subscriptions', 'app:a']
+        scopes2 = ['subscriptions', 'app:b']
+        auth_url = self._get_auth_url(scopes1)
+        response = self._auth_request(auth_url)
+        response = self._fill_auth_form(auth_url, scopes1)
+        response = self._follow_redirects(response,
+                                          'https://example.com/test.+')
+        code = self._catch_redirect(response)
+        req = {
+            'grant_type': 'authorization_code',
+            'code': code,
+            'redirect_uri': self.app.redirect_url,
+        }
+        self._do_invalid_token_request(req, scopes2, 400, 'invalid_scope')
+
 
 class InvalidTokenRequests(OAuthTestBase):
     """ Test invalid requests to token endpoint """
@@ -288,13 +341,13 @@ class InvalidTokenRequests(OAuthTestBase):
     def test_missing_token_auth(self):
         """ Test missing Basic Auth for Token Endpoint """
         app = Application(client_id='unknown', client_secret='unknown')
-        resp = self._do_invalid_token_request({}, 401, 'invalid_client',
+        resp = self._do_invalid_token_request({}, [], 401, 'invalid_client',
                                               auth=app_auth(app))
         self.assertTrue(resp['WWW-Authenticate'].startswith('Basic realm="'))
 
     def test_unknown_client_token_auth(self):
         """ Unknown client when authenticating for Token Endpoint """
-        resp = self._do_invalid_token_request({}, 401, 'invalid_client',
+        resp = self._do_invalid_token_request({}, [], 401, 'invalid_client',
                                               auth='')
         self.assertTrue(resp['WWW-Authenticate'].startswith('Basic realm="'))
 
@@ -303,21 +356,21 @@ class InvalidTokenRequests(OAuthTestBase):
         req = {
             'grant_type': 'new_fancy_grant',
         }
-        self._do_invalid_token_request(req, 400, 'unsupported_grant_type')
+        self._do_invalid_token_request(req, [], 400, 'unsupported_grant_type')
 
     def test_missing_grant_type(self):
         """ No grant_type results in 400 w/ error = unsupported_grant_type """
         req = {
             'asdf': 'test',
         }
-        self._do_invalid_token_request(req, 400, 'unsupported_grant_type')
+        self._do_invalid_token_request(req, [], 400, 'unsupported_grant_type')
 
     def test_missing_grant(self):
         """ No grant results in 400 w/ error = invalid_request """
         req = {
             'grant_type': 'authorization_code',
         }
-        self._do_invalid_token_request(req, 400, 'invalid_request')
+        self._do_invalid_token_request(req, [], 400, 'invalid_request')
 
     def test_invalid_grant(self):
         """ The auth code is not a valid UUID
@@ -330,7 +383,7 @@ class InvalidTokenRequests(OAuthTestBase):
             'code': 'some_invalid_code',
             'redirect_uri': self.app.redirect_url,
         }
-        self._do_invalid_token_request(req, 400, 'invalid_grant')
+        self._do_invalid_token_request(req, [], 400, 'invalid_grant')
 
     def test_noexisting_grant(self):
         """ The auth code is a valid UUID but does not exist """
@@ -339,35 +392,7 @@ class InvalidTokenRequests(OAuthTestBase):
             'code': uuid.uuid4().hex,
             'redirect_uri': self.app.redirect_url,
         }
-        self._do_invalid_token_request(req, 400, 'invalid_grant')
-
-    def _do_invalid_token_request(self, req, status, error, auth=None):
-        """ Performs an invalid token requests and verifies the result
-
-        If auth is None, the default (correct) authentication information is
-        sent. If no authentication header should be sent, an empty string
-        should be provided instead. """
-
-        if auth is None:
-            auth = app_auth(self.app)
-
-        headers = {}
-
-        if auth:
-            headers['HTTP_AUTHORIZATION'] = auth
-
-        token_url = reverse('oauth2:token')
-        response = self.client.post(
-            token_url,
-            urllib.parse.urlencode(req),
-            content_type='application/x-www-form-urlencoded',
-            **headers
-        )
-
-        self.assertEquals(response.status_code, status)
-        resp = json.loads(response.content.decode('ascii'))
-        self.assertEquals(resp['error'], error)
-        return response
+        self._do_invalid_token_request(req, [], 400, 'invalid_grant')
 
 
 class InvalidAuthRequests(OAuthTestBase):

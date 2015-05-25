@@ -59,10 +59,14 @@ API.
 
 To retrieve the tokens, issue a ``POST`` request to
 
-    https://mygpo-auth-test.herokuapp.com/oauth2/token
+    https://mygpo-auth-test.herokuapp.com/oauth2/token?scope=scope1%20scope2
 
 with `HTTP Basic Authentication <http://tools.ietf.org/html/rfc2617>`_, using
 the client ID as username and the client secret as password.
+
+The client MUST include the requested scopes as a query parameter. The scopes
+MUST NOT contain any scopes that have not previously been authorized, otherwise
+the request will be rejected.
 
 The request should contain the following parameters using the
 ``application/x-www-form-urlencoded`` format in the body.

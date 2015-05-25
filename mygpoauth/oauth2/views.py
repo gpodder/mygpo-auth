@@ -5,7 +5,7 @@ from functools import wraps
 
 from django import http
 from django.core.urlresolvers import reverse
-from django.views.generic.base import View, TemplateView
+from django.views.generic.base import View, TemplateResponseMixin
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -76,7 +76,19 @@ def require_application(realm):
     return _decorator
 
 
-class AuthorizeView(TemplateView):
+class OAuthView(View):
+    """ Base class for the OAuth views """
+
+    def _get_scopes(self, request):
+        """ Get the "scope" from the query parameters """
+        scope_str = request.GET.get('scope', '')
+        try:
+            return parse_scopes(scope_str)
+        except ScopeError as se:
+            raise InvalidScope(str(se))
+
+
+class AuthorizeView(OAuthView, TemplateResponseMixin):
     """ The Authorization Endpoint
 
     http://tools.ietf.org/html/rfc6749#section-3.1 """
@@ -124,6 +136,7 @@ class AuthorizeView(TemplateView):
             'new_scopes': new_scopes,
         })
 
+    @method_decorator(login_required)
     def post(self, request, app):
         """ Validate granted scopes """
         state = self._get_state(request)
@@ -202,21 +215,13 @@ class AuthorizeView(TemplateView):
         """ Get the "state" from the query parameters """
         return request.GET.get('state', '')
 
-    def _get_scopes(self, request):
-        """ Get the "scope" from the query parameters """
-        scope_str = request.GET.get('scope', '')
-        try:
-            return parse_scopes(scope_str)
-        except ScopeError as se:
-            raise InvalidScope(str(se))
-
     def _check_trigger_error(self, request):
         """ For test purposes trigger_error=true triggers a server error """
         if request.GET.get('trigger_error') == 'true':
             raise Exception
 
 
-class TokenView(View):
+class TokenView(OAuthView):
     """ The Token Endpoint
 
     http://tools.ietf.org/html/rfc6749#section-3.2 """
@@ -244,15 +249,17 @@ class TokenView(View):
 
     @method_decorator(require_application(realm='OAuth2Token'))
     def post(self, request, application):
+        """ A new token is requested """
 
         req = urllib.parse.parse_qs(request.body)
-        grant_type = self._get_grant_type(req)
-        code = self._get_code(req)
-        auth = self._get_auth(code)
+        auth = self._get_auth(req)
+        scopes = self._get_scopes(request)
+
+        self._ensure_scope_subset(scopes, auth)
 
         token = AccessToken.objects.create(
             authorization=auth,
-            scopes=auth.scopes,
+            scopes=list(scopes),
         )
 
         resp = {
@@ -272,13 +279,11 @@ class TokenView(View):
             'error_description': exc.error_description,
         }
 
-    def _get_auth(self, code):
-        try:
-            return Authorization.objects.get(code=code)
-        except Authorization.DoesNotExist:
-            raise InvalidGrant
+    def _get_auth(self, req):
+        """ Returns the authorization for the request """
 
-    def _get_grant_type(self, req):
+        # ensure that the grant_type "authorization_code" is used
+        # nothing else is supported at the moment
         grant_type = req.get(b'grant_type', None)
         if not grant_type:
             raise MissingGrantType
@@ -286,19 +291,28 @@ class TokenView(View):
         if req[b'grant_type'] != [b'authorization_code']:
             raise UnsupportedGrantType(grant_type)
 
-        return grant_type
-
-    def _get_code(self, req):
-        """ Returns the "code" value from the request """
+        # get the "code" value from the request """
         if len(req.get(b'code', [])) != 1:
             # code parameter missing or duplicated
             raise InvalidRequest
 
         try:
-            return uuid.UUID(req[b'code'][0].decode('ascii'))
+            code = uuid.UUID(req[b'code'][0].decode('ascii'))
         except ValueError:
             # code is malformed
             raise InvalidGrant
+
+        try:
+            return Authorization.objects.get(code=code)
+        except Authorization.DoesNotExist:
+            raise InvalidGrant
+
+    def _ensure_scope_subset(self, scopes, auth):
+        auth_scopes = set(auth.scopes)
+
+        # ensure that the requested scope has been authorized before
+        if not scopes.issubset(auth_scopes):
+            raise InvalidScope('The requested scope has not been authorized')
 
 
 class TokenInfoView(View):
