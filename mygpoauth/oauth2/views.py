@@ -16,13 +16,18 @@ from django.contrib.auth.decorators import login_required
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
 from mygpoauth.authorization.scope import (parse_scopes, ScopeError,
-                                           validate_scope)
+                                           validate_scope, ScopeGroup,
+                                           ScopeKey, get_scopegroups)
 from mygpoauth.utils import get_link_header, Link
 from .models import AccessToken
 from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
                          InvalidGrant, InvalidRequest, InvalidScope,
                          InvalidClient, UnsupportedResponseType, AccessDenied,
                          ServerError)
+
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def cors(f):
@@ -108,6 +113,7 @@ class AuthorizeView(OAuthView, TemplateResponseMixin):
                 raise  # pass on OAuthErrors to outer "except"
 
             except:
+                logger.exception('Unknown error in Authorize View')
                 raise ServerError  # convert other errors to ServerError
 
         except OAuthError as e:
@@ -127,13 +133,24 @@ class AuthorizeView(OAuthView, TemplateResponseMixin):
 
         new_scopes = self._get_new_scopes(authorization, scopes)
 
+        if authorization is None:
+            existing_scopes = []
+            default_exists = False
+
+        else:
+            existing_scopes = authorization.scopes
+            default_exists = True
+
         if not new_scopes:
             return self._success_redirect(app, authorization, state)
 
+        new_scopegroups = get_scopegroups(new_scopes, not default_exists)
+        existing_scopegroups = get_scopegroups(existing_scopes, default_exists)
+
         return self.render_to_response({
             'app': app,
-            'authorization': authorization,
-            'new_scopes': new_scopes,
+            'existing_scopegroups': existing_scopegroups,
+            'new_scopegroups': new_scopegroups,
         })
 
     @method_decorator(login_required)

@@ -1,7 +1,10 @@
 """ This module parses and validates scopes """
 
 import re
+import collections
 
+
+# Exceptions
 
 class ScopeError(Exception):
     """ Base class for scope errors """
@@ -23,15 +26,131 @@ class SubScopeMissing(ScopeError):
     """ A sub-scope is required but was not given """
 
 
+#
+# Scope Groups
+#
+
+class ScopeGroup(object):
+    """ A Scope Groups represents one or more (related) scopes.
+
+    Each scope group corresponds to the "main" part of a scope (the part before
+    the ":"), and can define "sub" parts (after ":"). """
+
+    # by default a scope group does not have any sub-scopes
+    sub_pattern = None
+
+    def __init__(self):
+        self.scope_keys = []
+
+    def add_scope(self, scope, sub):
+        self.scope_keys.append(ScopeKey(scope, sub))
+
+
+class DefaultScopeGroup(ScopeGroup):
+    """ The default permission that any authorized app has"""
+    title = 'View public information'
+    description = 'Read-only access to all public information (eg podcast ' \
+        'lists, public subscriptions, podcast data, etc) and the username'
+
+
+class SubscriptionsScopeGroup(ScopeGroup):
+    """ ScopeGroup for managing subscriptions """
+    title = 'See subscriptions'
+    description = 'Read-only access to all subscriptions'
+
+
+class SuggestionsScopeGroup(ScopeGroup):
+    title = 'Podcast suggestions'
+    description = 'Read-only access to suggested podcasts'
+
+
+class AccountScopeGroup(ScopeGroup):
+    title = 'Modify account settings'
+    description = 'Read-write access to profile data, settings (except for ' \
+        'app settings)'
+
+
+class FavoritesScopeGroup(ScopeGroup):
+    title = 'Favorite podcasts'
+    description = 'Adding and retrieving favorite episodes'
+
+
+class PodcastListsScopeGroup(ScopeGroup):
+    title = 'Create and edit podcast lists'
+    description = 'Write-access to podcast lists'
+
+
+class AppsScopeGroup(ScopeGroup):
+    title = 'Access your apps'
+    sub_pattern = re.compile(r'get|sync')
+
+    def add_scope(self, scope, sub):
+        if sub == 'get':
+            self.scope_keys.append(ScopeKey(scope, sub))
+        elif sub == 'sync':
+            self.scope_keys.append(ScopeKey(scope, sub))
+        else:
+            raise ValueError(scope)
+
+    @property
+    def description(self):
+        if len(self.scope_keys) == 1:
+            if self.scope_keys[0].key == 'apps:get':
+                return 'Listing your apps.'
+            else:
+                return 'Synchronizing your apps.'
+        else:
+            return 'Listing your apps and changing their synchronization ' \
+                   'status.'
+
+
+class ActionsScopeGroup(ScopeGroup):
+    title = 'Episode Actions'
+    description = ''
+    sub_pattern = re.compile(r'get|add')
+
+    def add_scope(self, scope, sub):
+        if sub == 'get':
+            self.scope_keys.append(ScopeKey(scope, sub))
+        elif sub == 'add':
+            self.scope_keys.append(ScopeKey(scope, sub))
+        else:
+            raise ValueError(scope)
+
+
+class AppScopeGroup(ScopeGroup):
+    sub_pattern = re.compile(r'[\w.-]{1,32}')
+
+    @property
+    def title(self):
+        if len(self.scope_keys) == 1:
+            return 'Manage app "{}"'.format(self.scope_keys[0].summary)
+
+        return 'Manage {} apps'.format(len(self.scope_keys))
+
+    @property
+    def description(self):
+        if len(self.scope_keys) == 1:
+            return 'Read-write access to the app.'
+        else:
+            return 'Read-write access to these apps:'
+
+    def add_scope(self, scope, sub):
+        self.scope_keys.append(ScopeKey(scope, sub))
+
+
+ScopeKey = collections.namedtuple('ScopeKey', 'key summary')
+
+
 ALLOWED_SCOPES = {
-    'subscriptions': None,
-    'suggestions': None,
-    'account': None,
-    'favorites': None,
-    'podcastlists': None,
-    'apps': re.compile(r'get|sync'),
-    'actions': re.compile(r'get|add'),
-    'app': re.compile(r'[\w.-]{1,32}'),
+    'subscriptions': SubscriptionsScopeGroup,
+    'suggestions': SuggestionsScopeGroup,
+    'account': AccountScopeGroup,
+    'favorites': FavoritesScopeGroup,
+    'podcastlists': PodcastListsScopeGroup,
+    'apps': AppsScopeGroup,
+    'actions': ActionsScopeGroup,
+    'app': AppScopeGroup,
 }
 
 
@@ -101,7 +220,7 @@ def validate_scope(scope):
     if main not in ALLOWED_SCOPES:
         raise InvalidScope(scope)
 
-    pattern = ALLOWED_SCOPES[main]
+    pattern = ALLOWED_SCOPES[main].sub_pattern
 
     if not pattern:
         if len(parts) > 1:
@@ -117,3 +236,26 @@ def validate_scope(scope):
             raise InvalidSubScope(scope)
 
     return scope
+
+
+def get_scopegroups(scopes, include_default):
+    groups = {}
+
+    for scope in scopes:
+        if ':' in scope:
+            main, sub = scope.split(':')
+        else:
+            main, sub = scope, None
+
+        if main not in groups:
+            groups[main] = ALLOWED_SCOPES[main]()
+
+        groups[main].add_scope(scope, sub)
+
+    groups = list(groups.values())
+
+    if include_default:
+        # the default permissions should always be listed first
+        groups.insert(0, DefaultScopeGroup())
+
+    return groups

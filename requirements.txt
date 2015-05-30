@@ -7,3 +7,6 @@ psycopg2cffi==2.7.0
 static3==0.6.1
 coverage==3.7.1
 django-nose==1.4
+Pillow==2.8.1
+Markdown==2.6.2
+bleach==1.4.1

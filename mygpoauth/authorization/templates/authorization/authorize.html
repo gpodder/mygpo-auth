@@ -1,38 +1,57 @@
-<html>
-<body>
+{% extends "base.html" %}
+{% load markdown %}
 
-{{app.name}} requests the following permissions.
+{% block content %}
 
-<form action="" method="post">
+<div id="authorization">
 
-{% csrf_token %}
+ <h1>
+  <span class="app-name">{{app.name}}</span>
+  wants to access your account
+ </h1>
 
-It already has the following permissions:
+ <div id="app">
+  <img class="app-logo" src="{{ app.logo_url }}" alt="{{ app.name }}' Logo" />
+  <p>{{ app.description|markdown }}</p>
 
-<ul>
-{% for scope in authorization.scopes %}
- <li>
-  <input name="scope:{{ scope }}" type="checkbox" checked="checked" />
-  {{ scope }}
- </li>
-{% endfor %}
-</ul>
+  <a class="app-link" rel="nofollow" href="{{ app.website_url }}">
+   <i class="fa fa-external-link"></i>
+   {{ app.name }} website
+  </a>
+ </div>
 
-It requests the following new scopes:
+ <div id="permissions">
+  <form action="" method="post">
 
-<ul>
-{% for scope in new_scopes %}
- <li>
-  <input name="scope:{{ scope }}" type="checkbox" checked="checked" />
-  {{ scope }}
- </li>
-{% endfor %}
-</ul>
+   {% csrf_token %}
 
-<button name="btn:allow" type="submit">OK</button>
-<button name="btn:deny" type="submit">Deny</button>
 
-</form>
+   {% if existing_scopegroups %}
+    <h2><span class="app-name">{{app.name}}</span> requests these additional permissions</h2>
+   {% else %}
+    <h2><span class="app-name">{{app.name}}</span> requests these permissions</h2>
+   {% endif %}
 
-</body>
-</html>
+   {% for sg in new_scopegroups %}
+    {% include "authorization/scopegroup-box.html" with scopegroup=sg only %}
+   {% endfor %}
+
+   {% if existing_scopegroups %}
+    <h2>You already gave <span class="app-name">{{app.name}}</span> these permissions</h2>
+
+    {% for sg in existing_scopegroups %}
+     {% include "authorization/scopegroup-box.html" with scopegroup=sg only %}
+    {% endfor %}
+   {% endif %}
+
+
+   <button name="btn:allow" type="submit">Allow</button>
+   <button name="btn:deny" type="submit">Deny</button>
+
+  </form>
+
+ </div>
+
+</div>
+
+{% endblock content %}

@@ -234,28 +234,28 @@ class OAuth2Flow(OAuthTestBase):
     @freeze_time(ISSUE_TIME)
     def test_login(self):
         """ Test a successful login """
-        SCOPES = ['subscriptions', 'apps:get']
+        SCOPES = ['subscriptions', 'apps:get', 'apps:sync']
 
         self._perform_auth(SCOPES)
 
     @freeze_time(ISSUE_TIME)
     def test_login_extend_scopes(self):
         """ Auth with scopes first, extend scopes for 2nd auth """
-        SCOPES = ['subscriptions', 'apps:get']
+        SCOPES = ['subscriptions', 'actions:get', 'apps:sync']
         self._perform_auth(SCOPES)
         self._perform_auth(SCOPES + ['app:1234'])
 
     @freeze_time(ISSUE_TIME)
     def test_login_same_scopes(self):
         """ Auth with same scopes twice, no login page showed on 2nd time """
-        SCOPES = ['subscriptions', 'apps:get']
+        SCOPES = ['actions:add', 'apps:get']
         self._perform_auth(SCOPES)
         self._perform_auth(SCOPES, expect_auth_page=False)
 
     @freeze_time(ISSUE_TIME)
     def test_one_auth_multiple_tokens(self):
         """ Verify that multiple okens can be issued after an auth """
-        scopes = ['subscriptions', 'apps:get']
+        scopes = ['apps:get', 'app:a', 'app:b']
         auth_url = self._get_auth_url(scopes)
         response = self._auth_request(auth_url)
         response = self._fill_auth_form(auth_url, scopes)

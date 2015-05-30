@@ -1,0 +1,30 @@
+    <div class="scope">
+     <div class="name">
+      {# If there is just one scope_key the checkbox is shown in the header #}
+      {% if scopegroup.scope_keys|length == 1 %}
+       <input name="scope:{{ scopegroup.scope_keys|first }}" id="scope:{{ scopegroup.scope_keys|first }}" type="checkbox" checked="checked" />
+       <label for="scope:{{ scopegroup.scope_keys|first }}">
+        {{ scopegroup.title }}
+       </label>
+      {% else %}
+       {{ scopegroup.title }}
+      {% endif %}
+     </div>
+     <div class="description">
+      {{ scopegroup.description }}
+      <div class="scope-list">
+       {# for multiple scope_key there are checkboxes in the box content #}
+       {% if scopegroup.scope_keys|length > 1 %}
+        {% for key in scopegroup.scope_keys %}
+         <div>
+          <input name="scope:{{ key.key }}" id="scope:{{ key.key }}" type="checkbox" checked="checked" />
+          <label for="scope:{{ key.key }}">
+           {{ key.summary }}
+          </label>
+         </div>
+        {% endfor %}
+       {% endif %}
+      </div>
+     </div>
+    </div>
+

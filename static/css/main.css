@@ -1,0 +1,269 @@
+
+/* http://www.paulirish.com/2012/box-sizing-border-box-ftw/ */
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+/* Fonts */
+
+html {
+    font-family: 'Source Sans Pro', sans-serif;
+}
+
+
+/* Sticky Footer */
+
+html {
+    position: relative;
+    min-height: 100%;
+}
+body {
+    margin: 0 0 2em; /* bottom = footer height */
+}
+footer {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2em;
+    width: 100%;
+}
+
+/* General content */
+
+#content {
+    width: 30em;
+    margin: 3em auto 0 auto;
+}
+
+h1 {
+    font-size: 3em;
+    font-weight: 400;
+}
+
+h2 {
+    font-size: 1.5em;
+    font-weight: 400;
+    padding-top: .5em;
+}
+
+a {
+    color: black;
+    text-decoration: none;
+}
+
+a:visited {
+    color: black;
+}
+
+strong {
+    font-weight: bold;
+}
+
+p {
+    margin-bottom: .3em;
+}
+
+/* Login page */
+
+#login {
+    border: thin solid #ccc;
+    border-radius: 5px;
+    padding: 1em 0 1em 0;
+    margin-top: 2em;
+    background-color: #eee;
+    box-shadow: 0px 0px 2px #ccc;
+}
+
+#login h2 {
+    text-align: left;
+    padding-left: 5%;
+    font-size: 1.2em;
+    font-weight: 700;
+    border-bottom: thin solid #ccc;
+    margin-bottom: 1em;
+}
+
+#login input,
+#login button {
+    display: block;
+    margin-bottom: 1em;
+}
+
+#login input {
+    margin-left: auto;
+    margin-right: auto;
+    width: 90%;
+}
+
+#login button {
+    margin-left: 5%;
+}
+
+
+/* Navigation */
+
+#nav-bar {
+    width: 100%;
+    background-color: #eee;
+    border-bottom: #ccc thin solid;
+}
+
+/* Center contents of navigation bar */
+#nav-bar > div {
+    padding-top: .3em;
+    padding-bottom: .3em;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 800px;
+}
+
+/* Distribution of navigation items
+   https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+*/
+#nav-bar > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+#nav-bar > div > * {
+    order: 1;
+}
+
+/* Search bar in navigation */
+#nav-bar input {
+    width: 20em;
+}
+
+
+/* Input fields */
+input:focus {
+    box-shadow: inset 0px 0px 1px 1px #ddd;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="password"] {
+    padding: 5px;
+    border: none;
+}
+
+#login input[type="text"],
+#login input[type="search"],
+#login input[type="password"] {
+  padding: 10px;
+}
+
+/* Buttons */
+
+button {
+    margin-top: .5em;
+    margin-right: .5em;
+    padding: 7px 15px;
+    background: #ddd;
+    color: black;
+    border-radius: 4px;
+    border: solid 1px #888;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 1px 1px rgba(0, 0, 0, 0.2);
+    user-select: none;
+}
+
+button:hover {
+    background: #dfdfdf;
+    border: solid 1px #aaa;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+button:active {
+    box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.6);
+    background: #dfdfdf;
+    border: solid 1px #aaa;
+}
+
+
+/* Authorization page */
+
+#authorization {
+}
+
+#authorization #app {
+    margin-top: .5em;
+    background-color: #eee;
+    padding: 1em;
+    border-radius: 5px;
+    margin-bottom: .5em;
+}
+
+#authorization #app img.app-logo {
+    float: right;
+    max-height: 150px;
+    max-width: 150px;
+}
+
+#authorization #app a.app-link {
+    padding-top: .2em;
+    display: block;
+    clear: both;
+}
+
+#authorization #permissions {
+}
+
+
+#authorization #permissions div.scope {
+    margin-top: .2em;
+    margin-bottom: .4em;
+    border: thin solid #ddd;
+    border-radius: 5px;
+}
+
+#authorization #permissions div.scope > * {
+    padding: .5em;
+}
+
+#authorization #permissions div.scope .name {
+    background-color: #eee;
+    border-bottom: thin solid #aaa;
+}
+
+#authorization #permissions div.scope .description {
+    font-size: .9em;
+    color: #111;
+}
+
+#authorization .app-name {
+    font-weight: bold;
+}
+
+
+/* Check boxes with Font-Awesome */
+
+input[type=checkbox] { display:none; } /* to hide the checkbox itself */
+input[type=checkbox] + label:before {
+  font-family: FontAwesome;
+  display: inline-block;
+}
+
+input[type=checkbox] + label:before {
+    content: "\f096"; /* unchecked icon */
+}
+
+input[type=checkbox] + label:before {
+    letter-spacing: 5px; /* space between checkbox and label */
+}
+
+input[type=checkbox]:checked + label:before {
+    content: "\f046"; /* checked icon */
+}
+input[type=checkbox]:checked + label:before {
+    letter-spacing: 3px; /* allow space for check mark */
+}
+
+footer {
+    text-align: center;
+}
