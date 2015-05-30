@@ -30,7 +30,9 @@ Name              Description
 2. User authenticates and authorizes your app
 ---------------------------------------------
 
-Not implemented yet.
+After logging in the user is shown an anthorization page on which the requested
+scopes are shown. The user can chose which scopes should be authorized, or can
+decline the request alltogether.
 
 
 3. The user is redirected back
