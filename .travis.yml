@@ -18,11 +18,3 @@ sudo: false
 
 env:
  - DATABASE_URL="postgres://postgres@localhost/mygpo_test"
-
-deploy:
-  provider: heroku
-  api_key:
-    secure: Te0KPJC6qODC1NEGlmB0tLnfIcbZkUs/l+Lc+RmQNqHH8FECOOasbt+DBQHsqfO6jOnKyN9Ygj7Em/ZRPdp989zkmIpXeG4afcH3FHp3PtFEGkFOwOTYtncdl8TnaY1vwX15HSqP6LBRNxbokQ5pi+LeAHSSGdMJ5pG21x74hqUjj3q7k1qvJkmQ/nt3Rxx+IqQ3qUgkAZZlFNXMwnSCTGH9LQWfg8XFhJkotguVdP/kyav1mwA7vHHGkqQzqZ6M9x1Y4lPeTgCd/Wf9HRaeRZAk8u/xNBkgFbj199chcubPoYSRjJmIiegD1XT75u9TT8IceHAAwEXBD1Z5vwT0m6ZlMNVQsczf9mLJj3bpK9owN02ISiJg5sS5Z63H4kv45zasrGdFxSJUw4/AY7SggbLmiSV0nT72rkoUAw7ZanZc+7yqi7xOVrAyUUCFYK21vdwUgCo0llWMYGEdYuXHqYMarhVonLMHuhnzQ20jSHrkr+j8AzHwY5plaWWuvFWd2l90ClPjv0v87AkOJU4LmGt+r67NCgpsT2Y6tC1OOZGtLw9mX1is3m8+TMlhKB7VgnBeSLuIhRlVk6u+BfXBhgDLOvc2LvY1lphkzqi7klu07YSaFU/O0WjKB2OgU1j/Am/sJ0low3UuB5zrPZ83upJy5+/fZLmDow9dYpMne30=
-  app: mygpo-auth-test
-  on:
-    repo: gpodder/mygpo-auth
