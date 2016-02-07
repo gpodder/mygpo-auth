@@ -1,5 +1,5 @@
 Django==1.9.2
-dj-database-url==0.3.0
+dj-database-url==0.4.0
 dj-static==0.0.6
 gunicorn==19.4.5
 cffi==1.5.0
@@ -7,6 +7,6 @@ psycopg2cffi==2.7.2
 static3==0.6.1
 coverage==4.0.3
 django-nose==1.4.3
-Pillow==3.1.0
+Pillow==3.1.1
 Markdown==2.6.5
 bleach==1.4.2
