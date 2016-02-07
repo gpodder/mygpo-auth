@@ -1,5 +1,6 @@
 import random
 import string
+import uuid
 
 from django.db import models
 from django.contrib.postgres.fields import ArrayField
@@ -11,6 +12,9 @@ def random_token(length=32):
 
 class Application(models.Model):
     """ A client application """
+
+    # primary key
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     # a human-readable name of the application
     name = models.CharField(max_length=128)

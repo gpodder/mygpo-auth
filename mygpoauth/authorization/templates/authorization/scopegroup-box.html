@@ -2,10 +2,12 @@
      <div class="name">
       {# If there is just one scope_key the checkbox is shown in the header #}
       {% if scopegroup.scope_keys|length == 1 %}
-       <input name="scope:{{ scopegroup.scope_keys|first }}" id="scope:{{ scopegroup.scope_keys|first }}" type="checkbox" checked="checked" />
-       <label for="scope:{{ scopegroup.scope_keys|first }}">
-        {{ scopegroup.title }}
-       </label>
+       {% with key=scopegroup.scope_keys|first %}
+        <input name="scope:{{ key.key }}" id="scope:{{ key.key }}" type="checkbox" checked="checked" />
+        <label for="scope:{{ key.key }}">
+         {{ scopegroup.title }}
+        </label>
+       {% endwith %}
       {% else %}
        {{ scopegroup.title }}
       {% endif %}
