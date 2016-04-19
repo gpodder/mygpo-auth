@@ -1,4 +1,0 @@
-flake8==2.5.4
-pep8==1.7.0
-envdir==0.7
-freezegun==0.3.6
