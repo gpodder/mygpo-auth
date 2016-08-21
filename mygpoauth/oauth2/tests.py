@@ -10,10 +10,10 @@ from freezegun import freeze_time
 from django.conf import settings
 from django.test import TestCase, Client
 from django.core.urlresolvers import reverse
-from django.contrib.auth.models import User
 
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
+from ..users.models import CustomUser as User
 
 
 ISSUE_TIME = '2015-05-16T13:47:47Z'

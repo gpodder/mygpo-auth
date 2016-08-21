@@ -3,7 +3,8 @@ import random
 
 from django.test import TestCase
 from django.contrib.auth import authenticate
-from django.contrib.auth.models import User
+
+from ..users.models import CustomUser as User
 
 
 class AuthenticationTests(TestCase):

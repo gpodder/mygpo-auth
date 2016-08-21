@@ -47,9 +47,10 @@ INSTALLED_APPS = (
     'mygpoauth.login',
     'mygpoauth.web',
     'mygpoauth.registration',
+    'mygpoauth.users',
 )
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

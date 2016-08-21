@@ -1,5 +1,5 @@
 Babel==2.3.4
-Django==1.9.9
+Django==1.10
 Jinja2==2.8
 Markdown==2.6.6
 MarkupSafe==0.23

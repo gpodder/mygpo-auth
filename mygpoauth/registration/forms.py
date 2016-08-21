@@ -1,7 +1,7 @@
 from django import forms
-from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 
-User = get_user_model()
+from ..users.models import CustomUser as User
 
 
 class RegistrationForm(forms.ModelForm):
@@ -24,3 +24,14 @@ class RegistrationForm(forms.ModelForm):
                 'autocomplete': 'off',
             }),
         }
+
+    def clean(self):
+        # It seems that setting the username_validator in
+        # CustomUser does not have any effect; therefore
+        # we check the username here again
+        # https://docs.djangoproject.com/en/dev/ref/contrib/auth/#django.contrib.auth.models.User.username_validator
+        validator = self.instance.username_validator
+        username = self.cleaned_data['username']
+        m = validator.regex.match(username)
+        if not m:
+            raise ValidationError(message=validator.message)

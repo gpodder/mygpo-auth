@@ -1,4 +1,4 @@
-Django>=1.9.3,<1.10
+Django>=1.10,<1.11
 dj-database-url
 dj-static
 gunicorn

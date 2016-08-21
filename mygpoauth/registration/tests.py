@@ -1,7 +1,7 @@
 from django.test import TestCase, Client, override_settings
 from django.core.urlresolvers import reverse
-from django.contrib.auth.models import User
 
+from ..users.models import CustomUser as User
 from mygpoauth.applications.models import Application
 
 
@@ -77,4 +77,16 @@ class RegistrationTests(TestCase):
         }, follow=False)
 
         # duplicate username
+        self.assertEqual(response.status_code, 400)
+
+    def test_non_ascii_username_fails(self):
+        url = reverse('registration:register', args=[self.app.client_id])
+        response = self.client.post(url, {
+            'username': 'äüßé',
+            'email': 'test@example.com',
+            'password': 'smith',
+            'client_id': self.app.client_id,
+        }, follow=False)
+
+        # registration form is shown again
         self.assertEqual(response.status_code, 400)
