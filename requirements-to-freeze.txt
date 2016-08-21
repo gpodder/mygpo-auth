@@ -16,3 +16,4 @@ envdir
 freezegun
 Sphinx
 sphinxcontrib-httpdomain
+django_coverage_plugin
