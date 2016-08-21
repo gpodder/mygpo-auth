@@ -32,7 +32,6 @@ class RegistrationView(TemplateView):
         form = forms.RegistrationForm(request.POST)
 
         if not form.is_valid():
-            print(form.errors)
             return self._render_error(request, form)
 
         client_id = form.cleaned_data['client_id']
