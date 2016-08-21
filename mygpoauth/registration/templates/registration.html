@@ -16,6 +16,7 @@
    {% csrf_token %}
    {{ form.username }} {{ form.username.errors }}
    {{ form.email }}    {{ form.email.errors }}
+   <!-- disables autocomplete --><input type="text" style="display:none">
    {{ form.password }} {{ form.password.errors }}
    <button type="submit">Register</button>
    <input type="hidden" name="" value="{{ next }}" />
