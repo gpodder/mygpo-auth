@@ -138,3 +138,7 @@ DEFAULT_TOKEN_EXPIRATION = timedelta(hours=1)
 AUTHENTICATION_BACKENDS = [
     'mygpoauth.login.backend.CaseInsensitiveModelBackend',
 ]
+
+# Client ID of the application that is used during
+# registration if none is provided
+DEFAULT_CLIENT_ID = os.getenv('DEFAULT_CLIENT_ID', '')

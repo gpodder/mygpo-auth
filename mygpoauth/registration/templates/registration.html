@@ -8,9 +8,9 @@
 
  <div id="login">
 
-  <h2>Register</h2>
+  <h2>Register <span class="app">for {{ app.name }}</span></h2>
 
-  <form method="post" action="{% url 'registration:register' %}" autocomplete="off">
+  <form method="post" action="{% url 'registration:register' app.client_id %}" autocomplete="off">
    {{ form.non_field_errors }}
 
    {% csrf_token %}

@@ -6,8 +6,6 @@ User = get_user_model()
 
 class RegistrationForm(forms.ModelForm):
 
-    client_id = forms.CharField(max_length=32, widget=forms.HiddenInput())
-
     class Meta:
         model = User
         fields = ['username', 'email', 'password']
