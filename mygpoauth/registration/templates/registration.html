@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+  <h1>
+   gpodder.net
+  </h1>
+
+ <div id="login">
+
+  <h2>Register</h2>
+
+  <form method="post" action="{% url 'registration:register' %}" autocomplete="off">
+   {{ form.non_field_errors }}
+
+   {% csrf_token %}
+   {{ form.username }} {{ form.username.errors }}
+   {{ form.email }}    {{ form.email.errors }}
+   {{ form.client_id }}
+   {{ form.password }} {{ form.password.errors }}
+   <button type="submit">Register</button>
+   <input type="hidden" name="" value="{{ next }}" />
+  </form>
+
+ </div>
+
+{% endblock content %}

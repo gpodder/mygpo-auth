@@ -46,6 +46,7 @@ INSTALLED_APPS = (
     'mygpoauth.oauth2',
     'mygpoauth.login',
     'mygpoauth.web',
+    'mygpoauth.registration',
 )
 
 MIDDLEWARE_CLASSES = (
