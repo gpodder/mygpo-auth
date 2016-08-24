@@ -90,3 +90,15 @@ class RegistrationTests(TestCase):
 
         # registration form is shown again
         self.assertEqual(response.status_code, 400)
+
+    def test_email_as_username_fails(self):
+        url = reverse('registration:register', args=[self.app.client_id])
+        response = self.client.post(url, {
+            'username': 'test@example.com',
+            'email': 'test@example.com',
+            'password': 'smith',
+            'client_id': self.app.client_id,
+        }, follow=False)
+
+        # registration form is shown again
+        self.assertEqual(response.status_code, 400)
