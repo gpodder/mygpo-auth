@@ -1,0 +1,3 @@
+Click on the link below to activate your account on {{ domain }}
+
+https://{{ domain }}{% url "registration:verify-email" verification_token %}

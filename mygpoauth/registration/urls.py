@@ -9,8 +9,12 @@ urlpatterns = [
         views.DefaultRegistrationView.as_view(),
         name='register-default'),
 
-    url(r'^(?P<client_id>\w+)',
+    url(r'^app/(?P<client_id>[^/]+)',
         views.RegistrationView.as_view(),
         name='register'),
+
+    url(r'^verify/(?P<token>\w+)',
+        views.VerifyEmailView.as_view(),
+        name='verify-email'),
 
 ]

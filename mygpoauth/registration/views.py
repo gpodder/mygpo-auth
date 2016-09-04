@@ -3,12 +3,14 @@ from django.utils.translation import ugettext as _
 from django.db import IntegrityError, transaction
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
+from django.template.loader import render_to_string
 from django.shortcuts import render
+from django.contrib.sites.requests import RequestSite
 from django.conf import settings
 
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
-from . import forms
+from . import forms, models
 
 
 class DefaultRegistrationView(View):
@@ -64,6 +66,9 @@ class RegistrationView(TemplateView):
                 scopes=[],  # TODO: which scopes? all?
             )
 
+            site = RequestSite(request)
+            self.send_verification_mail(new_user, site)
+
         return HttpResponseRedirect(app.website_url)
 
     def _render_error(self, request, form, app):
@@ -71,3 +76,31 @@ class RegistrationView(TemplateView):
             'form': form,
             'app': app,
         }, status=400)
+
+    def send_verification_mail(self, user, site):
+        """ Creates and sends verification email to user """
+        subj = render_to_string('verification_email_subject.txt', {
+            'domain': site.domain,
+        })
+        # remove trailing newline added by render_to_string
+        subj = subj.strip()
+
+        token = user.email_verification.verification_token.hex
+        msg = render_to_string('verification_email_message.txt', {
+            'domain': site.domain,
+            'verification_token': token,
+        })
+        user.email_user(subj, msg)
+
+
+class VerifyEmailView(View):
+    """ Verify email via token link """
+
+    def get(self, request, token):
+        """ Verify email address based on token link """
+        ev = models.EmailVerification.objects.get(verification_token=token)
+        ev.is_verified = True
+        ev.save(update_fields=['is_verified'])
+
+        # TODO: where to redirect?
+        return HttpResponseRedirect('/')

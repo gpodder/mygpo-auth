@@ -13,6 +13,7 @@ class EmailVerification(models.Model):
     user = models.OneToOneField(
         CustomUser,
         on_delete=models.CASCADE,
+        related_name='email_verification',
         primary_key=True,
     )
 

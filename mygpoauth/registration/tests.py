@@ -1,5 +1,10 @@
+import re
+from urllib.parse import urlsplit
+
 from django.test import TestCase, Client, override_settings
+from django.core import mail
 from django.core.urlresolvers import reverse
+from django.urls import resolve
 
 from ..users.models import CustomUser as User
 from mygpoauth.applications.models import Application
@@ -24,7 +29,7 @@ class RegistrationTests(TestCase):
         with override_settings(DEFAULT_CLIENT_ID=self.app.client_id):
             response = self.client.get(url)
             self.assertEqual(response['Location'],
-                             '/register/' + self.app.client_id)
+                             '/register/app/' + self.app.client_id)
 
     def test_access_registration_page(self):
         url = reverse('registration:register', args=[self.app.client_id])
@@ -102,3 +107,41 @@ class RegistrationTests(TestCase):
 
         # registration form is shown again
         self.assertEqual(response.status_code, 400)
+
+    def test_email_verification_email(self):
+        """ Test that verification email is sent, and that the link works """
+
+        url = reverse('registration:register', args=[self.app.client_id])
+        response = self.client.post(url, {
+            'username': 'john',
+            'email': 'john@example.com',
+            'password': 'smith',
+            'client_id': self.app.client_id,
+        }, follow=False)
+
+        # successful registration redirects to website url
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], self.app.website_url)
+
+        # Test that one message has been sent.
+        self.assertEqual(len(mail.outbox), 1)
+
+        msg = mail.outbox[0]
+
+        # find all URLs
+        urls = re.findall(r'https?://.+\b', msg.body)
+        rel_urls = [urlsplit(url).path for url in urls]
+        url_names = [resolve(rel_url).url_name for rel_url in rel_urls]
+
+        # find the verification URL(s), and make sure there was only one
+        verify_urls = [url for (url, name) in
+                       zip(rel_urls, url_names)
+                       if name == 'verify-email']
+        self.assertEqual(len(verify_urls), 1)
+
+        # verify email address
+        self.client.get(verify_urls[0])
+
+        # TODO: verify verification
+        user = User.objects.get(username='john')
+        self.assertTrue(user.email_verification.is_verified)
