@@ -2,7 +2,6 @@ alabaster==0.7.10
 Babel==2.4.0
 bleach==2.0.0
 certifi==2017.4.17
-cffi==1.10.0
 chardet==3.0.4
 coverage==4.4.1
 dj-database-url==0.4.2
@@ -26,9 +25,8 @@ nose==1.3.7
 olefile==0.44
 pep8==1.7.0
 Pillow==4.2.0
-psycopg2cffi==2.7.5
+psycopg2==2.7.1
 pycodestyle==2.3.1
-pycparser==2.17
 pyflakes==1.5.0
 Pygments==2.2.0
 python-dateutil==2.6.0

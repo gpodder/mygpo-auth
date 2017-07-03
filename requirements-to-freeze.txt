@@ -2,8 +2,7 @@ Django>=1.10,<1.11
 dj-database-url
 dj-static
 gunicorn
-cffi
-psycopg2cffi
+psycopg2
 static3
 coverage
 django-nose
