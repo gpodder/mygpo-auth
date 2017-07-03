@@ -295,7 +295,8 @@ class TokenInfo(OAuthTestBase):
         self.assertEquals(info['user']['login'], self.user.username)
 
     def test_nonexisting_token(self):
-        self._get_token_info('doesnotexist', status=404)
+        random = uuid.uuid4()
+        self._get_token_info(random.hex, status=404)
 
 
 class InvalidOAuthFlows(OAuthTestBase):
