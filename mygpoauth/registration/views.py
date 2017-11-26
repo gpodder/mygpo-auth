@@ -1,7 +1,7 @@
 from django.views.generic import TemplateView, View
 from django.utils.translation import ugettext as _
 from django.db import IntegrityError, transaction
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.template.loader import render_to_string
 from django.shortcuts import render

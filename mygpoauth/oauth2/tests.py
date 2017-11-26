@@ -9,7 +9,7 @@ from freezegun import freeze_time
 
 from django.conf import settings
 from django.test import TestCase, Client
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization

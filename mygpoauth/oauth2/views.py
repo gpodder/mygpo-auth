@@ -4,7 +4,7 @@ import urllib.parse
 from functools import wraps
 
 from django import http
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.views.generic.base import View, TemplateResponseMixin
 from django.utils.decorators import method_decorator
 from django.utils import timezone
