@@ -4,3 +4,4 @@ staticfiles
 envs/
 .coverage
 _build
+.cache

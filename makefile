@@ -1,6 +1,6 @@
 
 test:
-	envdir envs/dev/ coverage run --branch --source=mygpoauth ./manage.py test
+	envdir envs/dev/ pytest --cov=mygpoauth/ --cov-branch
 	coverage report --show-missing
 
 install-deps:
