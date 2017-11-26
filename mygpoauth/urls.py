@@ -13,9 +13,8 @@ urlpatterns = [
     url(r'^$', RedirectView.as_view(url='http://mygpo-auth.rtfd.org/',
                                     permanent=False),
         name='index'),
-    url(r'^admin/', include(admin.site.urls)),
-    url(r'^oauth2/', include('mygpoauth.oauth2.urls', namespace='oauth2')),
-    url(r'^login/', include('mygpoauth.login.urls', namespace='login')),
-    url(r'^register/', include('mygpoauth.registration.urls',
-        namespace='registration')),
+    url(r'^admin/', admin.site.urls),
+    url(r'^oauth2/', include('mygpoauth.oauth2.urls')),
+    url(r'^login/', include('mygpoauth.login.urls')),
+    url(r'^register/', include('mygpoauth.registration.urls')),
 ]
