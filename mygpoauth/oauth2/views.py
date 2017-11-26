@@ -173,7 +173,7 @@ class AuthorizeView(OAuthView, TemplateResponseMixin):
     def _success_redirect(self, app, authorization, state):
         """ Redirect to App's redirect_uri for successful case """
         redir_url = self._build_redirect_url(app, [
-            ('code', authorization.code.hex),
+            ('code', authorization.code),
             ('state', state)
         ])
         return http.HttpResponseRedirect(redir_url)
@@ -281,13 +281,13 @@ class TokenView(OAuthView):
 
         resp = {
             'token_type': 'Bearer',
-            'access_token': token.token.hex,
+            'access_token': token.token,
             'scope': ' '.join(auth.scopes),
             'expires_in': (token.expires - timezone.now()).total_seconds(),
         }
 
         response = http.JsonResponse(resp)
-        response['Link'] = get_link_header([TokenInfoLink(token.token.hex)])
+        response['Link'] = get_link_header([TokenInfoLink(token.token)])
         return response
 
     def _error_obj(self, exc):
@@ -350,7 +350,7 @@ class TokenInfoView(View):
 
         response = http.JsonResponse({
             'scopes': token.scopes,
-            'token': token.token.hex,
+            'token': token.token,
             'app': {
                 'url': None,
                 'name': token.authorization.application.name,

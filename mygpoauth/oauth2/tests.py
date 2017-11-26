@@ -296,7 +296,7 @@ class TokenInfo(OAuthTestBase):
 
     def test_nonexisting_token(self):
         random = uuid.uuid4()
-        self._get_token_info(random.hex, status=404)
+        self._get_token_info(random, status=404)
 
 
 class InvalidOAuthFlows(OAuthTestBase):
@@ -390,7 +390,7 @@ class InvalidTokenRequests(OAuthTestBase):
         """ The auth code is a valid UUID but does not exist """
         req = {
             'grant_type': 'authorization_code',
-            'code': uuid.uuid4().hex,
+            'code': uuid.uuid4(),
             'redirect_uri': self.app.redirect_url,
         }
         self._do_invalid_token_request(req, [], 400, 'invalid_grant')

@@ -85,7 +85,7 @@ class RegistrationView(TemplateView):
         # remove trailing newline added by render_to_string
         subj = subj.strip()
 
-        token = user.email_verification.verification_token.hex
+        token = user.email_verification.verification_token
         msg = render_to_string('verification_email_message.txt', {
             'domain': site.domain,
             'verification_token': token,

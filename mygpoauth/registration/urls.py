@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from django.urls import path
 
 from . import views
 
@@ -7,15 +7,15 @@ app_name = 'registration'
 
 urlpatterns = [
 
-    url(r'^$',
+    path('',
         views.DefaultRegistrationView.as_view(),
         name='register-default'),
 
-    url(r'^app/(?P<client_id>[^/]+)',
+    path('app/<str:client_id>',
         views.RegistrationView.as_view(),
         name='register'),
 
-    url(r'^verify/(?P<token>\w+)',
+    path('verify/<uuid:token>',
         views.VerifyEmailView.as_view(),
         name='verify-email'),
 
