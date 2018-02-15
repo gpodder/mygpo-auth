@@ -3,8 +3,7 @@ from urllib.parse import urlsplit
 
 from django.test import TestCase, Client, override_settings
 from django.core import mail
-from django.core.urlresolvers import reverse
-from django.urls import resolve
+from django.urls import resolve, reverse
 
 from ..users.models import CustomUser as User
 from mygpoauth.applications.models import Application

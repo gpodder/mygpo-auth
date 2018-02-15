@@ -27,7 +27,8 @@ class Migration(migrations.Migration):
                     db_index=True,
                     default=mygpoauth.oauth2.models._default_expires)),
                 ('authorization',
-                    models.ForeignKey(to='authorization.Authorization')),
+                    models.ForeignKey(to='authorization.Authorization',
+                                      on_delete=models.CASCADE)),
             ],
         ),
     ]

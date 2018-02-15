@@ -26,8 +26,9 @@ class Migration(migrations.Migration):
                     base_field=models.CharField(max_length=36), size=None)),
                 ('code', models.UUIDField(default=uuid.uuid4)),
                 ('application', models.ForeignKey(
-                    to='applications.Application')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                    to='applications.Application', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL,
+                                           on_delete=models.CASCADE)),
             ],
             options={
                 'abstract': False,
