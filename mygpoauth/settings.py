@@ -39,7 +39,6 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_nose',
     'mygpoauth.applications',
     'mygpoauth.authorization',
     'mygpoauth.oauth2',
@@ -119,11 +118,6 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, '..', 'static'),
 )
-
-
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
-
-NOSE_ARGS = ['--with-doctest']
 
 LOGIN_URL = 'login:login'
 

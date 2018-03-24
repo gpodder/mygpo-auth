@@ -5,7 +5,8 @@ gunicorn
 psycopg2
 static3
 coverage
-django-nose
+pytest-django
+pytest-cov
 Pillow
 Markdown
 bleach
