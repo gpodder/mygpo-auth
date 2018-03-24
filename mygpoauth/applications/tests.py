@@ -17,4 +17,4 @@ class Applications(TestCase):
     def test_str(self):
         app1 = models.Application.objects.create(name='app1', client_id='app')
 
-        self.assertEquals(str(app1), app1.name)
+        self.assertEqual(str(app1), app1.name)

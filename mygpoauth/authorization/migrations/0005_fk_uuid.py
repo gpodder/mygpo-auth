@@ -14,6 +14,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='authorization',
             name='application',
-            field=models.ForeignKey(to='applications.Application'),
+            field=models.ForeignKey(to='applications.Application',
+                                    on_delete=models.CASCADE),
         ),
     ]

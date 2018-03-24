@@ -6,7 +6,7 @@ from ..users.models import CustomUser as User
 class CaseInsensitiveModelBackend(ModelBackend):
     """ Authenticates with a case-insensitive username """
 
-    def authenticate(self, username=None, password=None, **kwargs):
+    def authenticate(self, request, username=None, password=None, **kwargs):
         try:
             user = User.objects.get(username__iexact=username)
             if user.check_password(password):

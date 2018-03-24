@@ -9,7 +9,7 @@ from freezegun import freeze_time
 
 from django.conf import settings
 from django.test import TestCase, Client
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
@@ -67,7 +67,7 @@ class OAuthTestBase(TestCase):
     def _follow_redirects(self, response, location_pattern, max_redirects=10):
         """ Follow redirects until one directs to location_pattern """
         for n in range(max_redirects):
-            self.assertEquals(response.status_code, 302)
+            self.assertEqual(response.status_code, 302)
             url = response['Location']
             if re.fullmatch(location_pattern, url):
                 break
@@ -88,7 +88,7 @@ class OAuthTestBase(TestCase):
         """ Extract the "code" field from the redirect """
         queries = self._verify_redirect_params(response, state='some_state')
         self.assertIn('code', queries.keys())
-        self.assertEquals(len(queries['code']), 1)
+        self.assertEqual(len(queries['code']), 1)
         code = queries['code'][0]
         return code
 
@@ -100,14 +100,14 @@ class OAuthTestBase(TestCase):
             'redirect_uri': self.app.redirect_url,
         }
         resp = self._token_request(req, set(scopes))
-        self.assertEquals(resp['token_type'], 'Bearer')
+        self.assertEqual(resp['token_type'], 'Bearer')
 
         # assert that the access_token exists and is a valid UUID
         token = uuid.UUID(resp['access_token'])
 
-        self.assertEquals(set(scopes), set(resp['scope'].split()))
+        self.assertEqual(set(scopes), set(resp['scope'].split()))
 
-        self.assertEquals(int(resp['expires_in']),
+        self.assertEqual(int(resp['expires_in']),
                           settings.DEFAULT_TOKEN_EXPIRATION.total_seconds())
         return resp
 
@@ -129,9 +129,9 @@ class OAuthTestBase(TestCase):
             HTTP_AUTHORIZATION=app_auth(self.app),
         )
 
-        self.assertEquals(response.status_code, 200, response.content)
+        self.assertEqual(response.status_code, 200, response.content)
         resp = json.loads(response.content.decode('ascii'))
-        self.assertEquals(resp['token_type'], 'Bearer')
+        self.assertEqual(resp['token_type'], 'Bearer')
         self.assertIn('access_token', resp)
 
         # from http://tools.ietf.org/html/rfc6749#section-5.1
@@ -140,8 +140,8 @@ class OAuthTestBase(TestCase):
         # response containing tokens, credentials, or other sensitive
         # information, as well as the "Pragma" response header field [RFC2616]
         # with a value of "no-cache".
-        self.assertEquals(response['Cache-Control'], 'no-store')
-        self.assertEquals(response['Pragma'], 'no-cache')
+        self.assertEqual(response['Cache-Control'], 'no-store')
+        self.assertEqual(response['Pragma'], 'no-cache')
 
         # Verify that the response contains a Link header (RFC 5988) pointing
         # to the token-info URL
@@ -153,34 +153,34 @@ class OAuthTestBase(TestCase):
         self.assertIn(link, links)
 
         if scopes is not None:
-            self.assertEquals(set(resp['scope'].split()), set(scopes))
+            self.assertEqual(set(resp['scope'].split()), set(scopes))
         self.assertIn('expires_in', resp)
         return resp
 
     def _verify_redirect_params(self, resp, **params):
         """ Verify that the expected params were included in the redirect """
-        self.assertEquals(resp.status_code, 302)
+        self.assertEqual(resp.status_code, 302)
 
         redir_url = resp['Location']
         urlparts = urllib.parse.urlsplit(redir_url)
         scheme, netloc, path, query, fragment = urlparts
-        self.assertEquals(scheme, 'https')
-        self.assertEquals(netloc, 'example.com')
-        self.assertEquals(path, '/test')
-        self.assertEquals(fragment, '')
+        self.assertEqual(scheme, 'https')
+        self.assertEqual(netloc, 'example.com')
+        self.assertEqual(path, '/test')
+        self.assertEqual(fragment, '')
 
         queries = urllib.parse.parse_qs(query)
-        self.assertEquals(queries['test'], ['true'],)
+        self.assertEqual(queries['test'], ['true'],)
 
         for param, value in params.items():
-            self.assertEquals(queries[param], [value])
+            self.assertEqual(queries[param], [value])
 
         return queries
 
     def _get_token_info(self, token, status=200):
         info_url = reverse('oauth2:token-info', args=[token])
         response = self.client.get(info_url)
-        self.assertEquals(response.status_code, status, response.content)
+        self.assertEqual(response.status_code, status, response.content)
         resp = json.loads(response.content.decode('ascii'))
         return resp
 
@@ -222,9 +222,9 @@ class OAuthTestBase(TestCase):
             **headers
         )
 
-        self.assertEquals(response.status_code, status)
+        self.assertEqual(response.status_code, status)
         resp = json.loads(response.content.decode('ascii'))
-        self.assertEquals(resp['error'], error)
+        self.assertEqual(resp['error'], error)
         return response
 
 
@@ -287,16 +287,16 @@ class TokenInfo(OAuthTestBase):
         info = self._get_token_info(token)
 
         self.assertCountEqual(info['scopes'], SCOPES)
-        self.assertEquals(info['token'], token)
-        self.assertEquals(info['app']['url'], None)
-        self.assertEquals(info['app']['name'], self.app.name)
-        self.assertEquals(info['app']['client_id'], self.app.client_id)
-        self.assertEquals(info['created_at'], ISSUE_TIME)
-        self.assertEquals(info['user']['login'], self.user.username)
+        self.assertEqual(info['token'], token)
+        self.assertEqual(info['app']['url'], None)
+        self.assertEqual(info['app']['name'], self.app.name)
+        self.assertEqual(info['app']['client_id'], self.app.client_id)
+        self.assertEqual(info['created_at'], ISSUE_TIME)
+        self.assertEqual(info['user']['login'], self.user.username)
 
     def test_nonexisting_token(self):
         random = uuid.uuid4()
-        self._get_token_info(random.hex, status=404)
+        self._get_token_info(random, status=404)
 
 
 class InvalidOAuthFlows(OAuthTestBase):
@@ -390,7 +390,7 @@ class InvalidTokenRequests(OAuthTestBase):
         """ The auth code is a valid UUID but does not exist """
         req = {
             'grant_type': 'authorization_code',
-            'code': uuid.uuid4().hex,
+            'code': uuid.uuid4(),
             'redirect_uri': self.app.redirect_url,
         }
         self._do_invalid_token_request(req, [], 400, 'invalid_grant')
