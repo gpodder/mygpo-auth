@@ -9,7 +9,7 @@ dj-static==0.0.6
 Django==2.0.3
 django-coverage-plugin==1.5.0
 docutils==0.14
-envdir==0.7
+envdir==1.0.1
 flake8==3.5.0
 freezegun==0.3.10
 gunicorn==19.7.1
