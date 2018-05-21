@@ -30,7 +30,7 @@ pep8==1.7.1
 Pillow==5.1.0
 psycopg2==2.7.4
 pycodestyle==2.4.0
-pyflakes==1.6.0
+pyflakes==2.0.0
 Pygments==2.2.0
 pyparsing==2.2.0
 python-dateutil==2.7.2
