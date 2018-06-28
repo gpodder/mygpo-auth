@@ -21,7 +21,7 @@ Markdown==2.6.11
 MarkupSafe==1.0
 mccabe==0.6.1
 olefile==0.44
-py==1.5.3
+py==1.5.4
 pytest==3.6.1
 pytest-cov==2.5.1
 pytest-django==3.2.1
