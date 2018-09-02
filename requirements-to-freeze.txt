@@ -1,4 +1,4 @@
-Django>=2.0,<2.1
+Django>=2.1,<2.2
 dj-database-url
 dj-static
 gunicorn
@@ -16,4 +16,3 @@ envdir
 freezegun
 Sphinx
 sphinxcontrib-httpdomain
-django_coverage_plugin

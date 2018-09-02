@@ -14,14 +14,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='application',
+            name='id',
+        ),
         migrations.AlterField(
             model_name='application',
             name='uuid',
             field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-        ),
-        migrations.RemoveField(
-            model_name='application',
-            name='id',
         ),
         migrations.RenameField(
             model_name='application',
