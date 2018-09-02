@@ -1,5 +1,5 @@
 alabaster==0.7.11
-atomicwrites==1.1.5
+atomicwrites==1.2.1
 attrs==18.1.0
 Babel==2.6.0
 bleach==2.1.4
