@@ -5,3 +5,4 @@ envs/
 .coverage
 _build
 .cache
+.pytest_cache/
