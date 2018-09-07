@@ -1,10 +1,13 @@
 alabaster==0.7.11
+appdirs==1.4.3
 atomicwrites==1.2.1
 attrs==18.1.0
 Babel==2.6.0
+black==18.6b4
 bleach==2.1.4
 certifi==2018.8.24
 chardet==3.0.4
+click==6.7
 coverage==4.5.1
 dj-database-url==0.5.0
 dj-static==0.0.6
@@ -47,5 +50,6 @@ Sphinx==1.7.9
 sphinxcontrib-httpdomain==1.7.0
 sphinxcontrib-websupport==1.1.0
 static3==0.7.0
+toml==0.9.4
 urllib3==1.23
 webencodings==0.5.1
