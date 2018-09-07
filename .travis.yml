@@ -22,6 +22,7 @@ install:
 
 script:
   - coverage run --branch --source=mygpoauth ./manage.py test
+  - make check-code-format
 
 after_script:
   - coveralls
