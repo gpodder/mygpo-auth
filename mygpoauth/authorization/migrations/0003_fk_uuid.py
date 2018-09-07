@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from django.db import models, migrations
 
 
-
 def set_uuids(apps, schema_editor):
     # We get the model from the versioned app registry;
     # if we directly import it, it'll be the wrong version

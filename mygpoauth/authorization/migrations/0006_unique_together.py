@@ -9,9 +9,7 @@ from django.db import models, migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('authorization', '0005_fk_uuid'),
-    ]
+    dependencies = [('authorization', '0005_fk_uuid')]
 
     operations = [
         # add dummy field again, otherwise AlterUniqueTogether fails
@@ -21,12 +19,8 @@ class Migration(migrations.Migration):
             field=models.UUIDField(default=uuid.uuid4),
         ),
         migrations.AlterUniqueTogether(
-            name='authorization',
-            unique_together=set([('user', 'application')]),
+            name='authorization', unique_together=set([('user', 'application')])
         ),
         # delete dummy field again
-        migrations.RemoveField(
-            model_name='authorization',
-            name='applicationold',
-        )
+        migrations.RemoveField(model_name='authorization', name='applicationold'),
     ]

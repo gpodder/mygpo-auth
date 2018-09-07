@@ -8,24 +8,18 @@ import uuid
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0006_uuid'),
-        ('authorization', '0004_fk_uuid'),
-    ]
+    dependencies = [('applications', '0006_uuid'), ('authorization', '0004_fk_uuid')]
 
     operations = [
-        migrations.RemoveField(
-            model_name='application',
-            name='id',
-        ),
+        migrations.RemoveField(model_name='application', name='id'),
         migrations.AlterField(
             model_name='application',
             name='uuid',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+            field=models.UUIDField(
+                default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+            ),
         ),
         migrations.RenameField(
-            model_name='application',
-            old_name='uuid',
-            new_name='id',
-        )
+            model_name='application', old_name='uuid', new_name='id'
+        ),
     ]

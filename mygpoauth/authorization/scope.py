@@ -6,6 +6,7 @@ import collections
 
 # Exceptions
 
+
 class ScopeError(Exception):
     """ Base class for scope errors """
 
@@ -30,6 +31,7 @@ class SubScopeMissing(ScopeError):
 # Scope Groups
 #
 
+
 class ScopeGroup(object):
     """ A Scope Groups represents one or more (related) scopes.
 
@@ -48,13 +50,14 @@ class ScopeGroup(object):
 
 class DefaultScopeGroup(ScopeGroup):
     """ The default permission that any authorized app has"""
+
     title = 'View public information'
-    description = 'Read-only access to all public information (eg podcast ' \
-        'lists, public subscriptions, podcast data, etc) and the username'
+    description = 'Read-only access to all public information (eg podcast ' 'lists, public subscriptions, podcast data, etc) and the username'
 
 
 class SubscriptionsScopeGroup(ScopeGroup):
     """ ScopeGroup for managing subscriptions """
+
     title = 'See subscriptions'
     description = 'Read-only access to all subscriptions'
 
@@ -66,8 +69,7 @@ class SuggestionsScopeGroup(ScopeGroup):
 
 class AccountScopeGroup(ScopeGroup):
     title = 'Modify account settings'
-    description = 'Read-write access to profile data, settings (except for ' \
-        'app settings)'
+    description = 'Read-write access to profile data, settings (except for ' 'app settings)'
 
 
 class FavoritesScopeGroup(ScopeGroup):
@@ -100,8 +102,7 @@ class AppsScopeGroup(ScopeGroup):
             else:
                 return 'Synchronizing your apps.'
         else:
-            return 'Listing your apps and changing their synchronization ' \
-                   'status.'
+            return 'Listing your apps and changing their synchronization ' 'status.'
 
 
 class ActionsScopeGroup(ScopeGroup):

@@ -15,18 +15,32 @@ from django.contrib.auth.decorators import login_required
 
 from mygpoauth.applications.models import Application
 from mygpoauth.authorization.models import Authorization
-from mygpoauth.authorization.scope import (parse_scopes, ScopeError,
-                                           validate_scope, ScopeGroup,
-                                           ScopeKey, get_scopegroups)
+from mygpoauth.authorization.scope import (
+    parse_scopes,
+    ScopeError,
+    validate_scope,
+    ScopeGroup,
+    ScopeKey,
+    get_scopegroups,
+)
 from mygpoauth.utils import get_link_header, Link
 from .models import AccessToken
-from .exceptions import (MissingGrantType, UnsupportedGrantType, OAuthError,
-                         InvalidGrant, InvalidRequest, InvalidScope,
-                         InvalidClient, UnsupportedResponseType, AccessDenied,
-                         ServerError)
+from .exceptions import (
+    MissingGrantType,
+    UnsupportedGrantType,
+    OAuthError,
+    InvalidGrant,
+    InvalidRequest,
+    InvalidScope,
+    InvalidClient,
+    UnsupportedResponseType,
+    AccessDenied,
+    ServerError,
+)
 
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,20 +51,24 @@ def cors(f):
         response = f(request, *args, **kwargs)
         response['Access-Control-Max-Age'] = 86400
         response['Access-Control-Allow-Origin'] = '*'
-        response['Access-Control-Allow-Methods'] = ('GET, POST, PUT, PATCH, '
-                                                    'DELETE, OPTIONS')
-        response['Access-Control-Allow-Headers'] = ', '.join([
-            'x-requested-with',
-            'content-type',
-            'accept',
-            'origin',
-            'authorization',
-            'x-csrftoken',
-            'user-agent',
-            'accept-encoding'
-        ])
+        response['Access-Control-Allow-Methods'] = (
+            'GET, POST, PUT, PATCH, ' 'DELETE, OPTIONS'
+        )
+        response['Access-Control-Allow-Headers'] = ', '.join(
+            [
+                'x-requested-with',
+                'content-type',
+                'accept',
+                'origin',
+                'authorization',
+                'x-csrftoken',
+                'user-agent',
+                'accept-encoding',
+            ]
+        )
         response['Allow'] = 'POST, OPTIONS'
         return response
+
     return _wrapper
 
 
@@ -64,20 +82,21 @@ def require_application(realm):
             if not auth.startswith('Basic '):
                 raise InvalidClient(realm=realm)
 
-            auth = auth[len('Basic '):]
+            auth = auth[len('Basic ') :]
             auth = base64.b64decode(auth.encode('ascii')).decode('ascii')
             client_id, client_secret = auth.split(':')
 
             try:
                 application = Application.objects.get(
-                    client_id=client_id,
-                    client_secret=client_secret)
+                    client_id=client_id, client_secret=client_secret
+                )
             except Application.DoesNotExist:
                 raise InvalidClient(realm=realm)
 
             return f(request, application, *args, **kwargs)
 
         return _wrapper
+
     return _decorator
 
 
@@ -127,8 +146,7 @@ class AuthorizeView(OAuthView, TemplateResponseMixin):
         scopes = self._get_scopes(request)
 
         authorization = Authorization.objects.filter(
-            user=request.user,
-            application=app,
+            user=request.user, application=app
         ).first()
 
         new_scopes = self._get_new_scopes(authorization, scopes)
@@ -147,11 +165,13 @@ class AuthorizeView(OAuthView, TemplateResponseMixin):
         new_scopegroups = get_scopegroups(new_scopes, not default_exists)
         existing_scopegroups = get_scopegroups(existing_scopes, default_exists)
 
-        return self.render_to_response({
-            'app': app,
-            'existing_scopegroups': existing_scopegroups,
-            'new_scopegroups': new_scopegroups,
-        })
+        return self.render_to_response(
+            {
+                'app': app,
+                'existing_scopegroups': existing_scopegroups,
+                'new_scopegroups': new_scopegroups,
+            }
+        )
 
     @method_decorator(login_required)
     def post(self, request, app):
@@ -161,29 +181,23 @@ class AuthorizeView(OAuthView, TemplateResponseMixin):
         scopes = self._get_authorized_scopes(request)
 
         auth, created = Authorization.objects.update_or_create(
-            user=request.user,
-            application=app,
-            defaults={
-                'scopes': list(scopes),
-            }
+            user=request.user, application=app, defaults={'scopes': list(scopes)}
         )
 
         return self._success_redirect(app, auth, state)
 
     def _success_redirect(self, app, authorization, state):
         """ Redirect to App's redirect_uri for successful case """
-        redir_url = self._build_redirect_url(app, [
-            ('code', authorization.code),
-            ('state', state)
-        ])
+        redir_url = self._build_redirect_url(
+            app, [('code', authorization.code), ('state', state)]
+        )
         return http.HttpResponseRedirect(redir_url)
 
     def _error_redirect(self, app, err):
         """ Redirect to App's redirect_uri for error case """
-        redir_url = self._build_redirect_url(app, [
-            ('error', err.error),
-            ('error_description', err.error_description),
-        ])
+        redir_url = self._build_redirect_url(
+            app, [('error', err.error), ('error_description', err.error_description)]
+        )
         return http.HttpResponseRedirect(redir_url)
 
     def _build_redirect_url(self, application, params):
@@ -214,7 +228,7 @@ class AuthorizeView(OAuthView, TemplateResponseMixin):
             if not (key.startswith('scope:') and value == 'on'):
                 continue
 
-            scope = key[len('scope:'):]
+            scope = key[len('scope:') :]
             validate_scope(scope)
             yield scope
 
@@ -274,10 +288,7 @@ class TokenView(OAuthView):
 
         self._ensure_scope_subset(scopes, auth)
 
-        token = AccessToken.objects.create(
-            authorization=auth,
-            scopes=list(scopes),
-        )
+        token = AccessToken.objects.create(authorization=auth, scopes=list(scopes))
 
         resp = {
             'token_type': 'Bearer',
@@ -291,10 +302,7 @@ class TokenView(OAuthView):
         return response
 
     def _error_obj(self, exc):
-        return {
-            'error': exc.error,
-            'error_description': exc.error_description,
-        }
+        return {'error': exc.error, 'error_description': exc.error_description}
 
     def _get_auth(self, req):
         """ Returns the authorization for the request """
@@ -339,28 +347,30 @@ class TokenInfoView(View):
     def get(self, request, token):
 
         try:
-            token = AccessToken.objects.filter(token=token)\
-                               .select_related('authorization',
-                                               'authorization__application',
-                                               'authorization__user')\
-                               .get()
+            token = (
+                AccessToken.objects.filter(token=token)
+                .select_related(
+                    'authorization', 'authorization__application', 'authorization__user'
+                )
+                .get()
+            )
         except (ValueError, AccessToken.DoesNotExist):
             # ValueError is raised if the token is not a valid UUID
             return http.JsonResponse({}, status=404)
 
-        response = http.JsonResponse({
-            'scopes': token.scopes,
-            'token': token.token,
-            'app': {
-                'url': None,
-                'name': token.authorization.application.name,
-                'client_id': token.authorization.application.client_id,
-            },
-            'created_at': token.created,
-            'user': {
-                'login': token.authorization.user.username,
+        response = http.JsonResponse(
+            {
+                'scopes': token.scopes,
+                'token': token.token,
+                'app': {
+                    'url': None,
+                    'name': token.authorization.application.name,
+                    'client_id': token.authorization.application.client_id,
+                },
+                'created_at': token.created,
+                'user': {'login': token.authorization.user.username},
             }
-        })
+        )
         response['Pragma'] = 'no-cache'
         return response
 

@@ -24,13 +24,9 @@ class OAuthTestBase(TestCase):
 
     def setUp(self):
         self.app = Application.objects.create(
-            name='Test',
-            redirect_url='https://example.com/test?test=true',
+            name='Test', redirect_url='https://example.com/test?test=true'
         )
-        self.user = User.objects.create(
-            username='username',
-            email='user@example.com',
-        )
+        self.user = User.objects.create(username='username', email='user@example.com')
         pwd = "".join(random.sample(string.ascii_letters, 8))
         self.user.set_password(pwd)
         self.user.save()
@@ -43,8 +39,9 @@ class OAuthTestBase(TestCase):
         self.app.delete()
         self.user.delete()
 
-    def _get_auth_url(self, scopes, response_type='code', state='some_state',
-                      trigger_error=False):
+    def _get_auth_url(
+        self, scopes, response_type='code', state='some_state', trigger_error=False
+    ):
         auth_url = reverse('oauth2:authorize')
 
         params = [
@@ -107,14 +104,13 @@ class OAuthTestBase(TestCase):
 
         self.assertEqual(set(scopes), set(resp['scope'].split()))
 
-        self.assertEqual(int(resp['expires_in']),
-                          settings.DEFAULT_TOKEN_EXPIRATION.total_seconds())
+        self.assertEqual(
+            int(resp['expires_in']), settings.DEFAULT_TOKEN_EXPIRATION.total_seconds()
+        )
         return resp
 
     def _get_token_url(self, scopes):
-        params = [
-            ('scope', ' '.join(scopes)),
-        ]
+        params = [('scope', ' '.join(scopes))]
         query = urllib.parse.urlencode(params)
         return reverse('oauth2:token') + '?' + query
 
@@ -147,8 +143,9 @@ class OAuthTestBase(TestCase):
         # to the token-info URL
         token = resp['access_token']
         token_info_url = reverse('oauth2:token-info', args=(token,))
-        link = '<{target}>; rel="https://gpodder.net/relation/token-info"'\
-               .format(target=token_info_url)
+        link = '<{target}>; rel="https://gpodder.net/relation/token-info"'.format(
+            target=token_info_url
+        )
         links = response['Link'].split(',')
         self.assertIn(link, links)
 
@@ -170,7 +167,7 @@ class OAuthTestBase(TestCase):
         self.assertEqual(fragment, '')
 
         queries = urllib.parse.parse_qs(query)
-        self.assertEqual(queries['test'], ['true'],)
+        self.assertEqual(queries['test'], ['true'])
 
         for param, value in params.items():
             self.assertEqual(queries[param], [value])
@@ -192,8 +189,7 @@ class OAuthTestBase(TestCase):
         if expect_auth_page:
             response = self._fill_auth_form(auth_url, scopes)
 
-        response = self._follow_redirects(response,
-                                          'https://example.com/test.+')
+        response = self._follow_redirects(response, 'https://example.com/test.+')
 
         code = self._catch_redirect(response)
         resp = self._tokens_from_auth_code(code, scopes)
@@ -219,7 +215,7 @@ class OAuthTestBase(TestCase):
             token_url,
             urllib.parse.urlencode(req),
             content_type='application/x-www-form-urlencoded',
-            **headers
+            **headers,
         )
 
         self.assertEqual(response.status_code, status)
@@ -259,8 +255,7 @@ class OAuth2Flow(OAuthTestBase):
         auth_url = self._get_auth_url(scopes)
         response = self._auth_request(auth_url)
         response = self._fill_auth_form(auth_url, scopes)
-        response = self._follow_redirects(response,
-                                          'https://example.com/test.+')
+        response = self._follow_redirects(response, 'https://example.com/test.+')
         code = self._catch_redirect(response)
 
         # retrieve two tokens for the same authorization
@@ -300,15 +295,13 @@ class TokenInfo(OAuthTestBase):
 
 
 class InvalidOAuthFlows(OAuthTestBase):
-
     def test_deny(self):
         """ Perform an authorization for the given scopes """
         scopes = ['subscriptions', 'apps:get']
         auth_url = self._get_auth_url(scopes)
         response = self._auth_request(auth_url)
         response = self._auth_form_deny(auth_url, scopes)
-        response = self._follow_redirects(response,
-                                          'https://example.com/test.+')
+        response = self._follow_redirects(response, 'https://example.com/test.+')
         self._verify_redirect_params(response, error='access_denied')
 
     def _auth_form_deny(self, auth_url, scopes):
@@ -325,8 +318,7 @@ class InvalidOAuthFlows(OAuthTestBase):
         auth_url = self._get_auth_url(scopes1)
         response = self._auth_request(auth_url)
         response = self._fill_auth_form(auth_url, scopes1)
-        response = self._follow_redirects(response,
-                                          'https://example.com/test.+')
+        response = self._follow_redirects(response, 'https://example.com/test.+')
         code = self._catch_redirect(response)
         req = {
             'grant_type': 'authorization_code',
@@ -342,35 +334,29 @@ class InvalidTokenRequests(OAuthTestBase):
     def test_missing_token_auth(self):
         """ Test missing Basic Auth for Token Endpoint """
         app = Application(client_id='unknown', client_secret='unknown')
-        resp = self._do_invalid_token_request({}, [], 401, 'invalid_client',
-                                              auth=app_auth(app))
+        resp = self._do_invalid_token_request(
+            {}, [], 401, 'invalid_client', auth=app_auth(app)
+        )
         self.assertTrue(resp['WWW-Authenticate'].startswith('Basic realm="'))
 
     def test_unknown_client_token_auth(self):
         """ Unknown client when authenticating for Token Endpoint """
-        resp = self._do_invalid_token_request({}, [], 401, 'invalid_client',
-                                              auth='')
+        resp = self._do_invalid_token_request({}, [], 401, 'invalid_client', auth='')
         self.assertTrue(resp['WWW-Authenticate'].startswith('Basic realm="'))
 
     def test_invalid_grant_type(self):
         """ Invalid grant type: 400, error = unsupported_grant_type """
-        req = {
-            'grant_type': 'new_fancy_grant',
-        }
+        req = {'grant_type': 'new_fancy_grant'}
         self._do_invalid_token_request(req, [], 400, 'unsupported_grant_type')
 
     def test_missing_grant_type(self):
         """ No grant_type results in 400 w/ error = unsupported_grant_type """
-        req = {
-            'asdf': 'test',
-        }
+        req = {'asdf': 'test'}
         self._do_invalid_token_request(req, [], 400, 'unsupported_grant_type')
 
     def test_missing_grant(self):
         """ No grant results in 400 w/ error = invalid_request """
-        req = {
-            'grant_type': 'authorization_code',
-        }
+        req = {'grant_type': 'authorization_code'}
         self._do_invalid_token_request(req, [], 400, 'invalid_request')
 
     def test_invalid_grant(self):
@@ -401,23 +387,25 @@ class InvalidAuthRequests(OAuthTestBase):
 
     def test_invalid_scope(self):
         """ Test a request for aninvalid scope """
-        self._do_invalid_auth_request(scopes=['invalid scope'],
-                                      error='invalid_scope')
+        self._do_invalid_auth_request(scopes=['invalid scope'], error='invalid_scope')
 
     def test_invalid_response_type(self):
         """ Test a request with an invalid response type """
-        self._do_invalid_auth_request(response_type='magic_response',
-                                      error='unsupported_response_type')
+        self._do_invalid_auth_request(
+            response_type='magic_response', error='unsupported_response_type'
+        )
 
     def test_server_error(self):
         """ Cause a test server error """
         self._do_invalid_auth_request(trigger_error=True, error='server_error')
 
-    def _do_invalid_auth_request(self, response_type='code', scopes=[],
-                                 error='', trigger_error=False):
+    def _do_invalid_auth_request(
+        self, response_type='code', scopes=[], error='', trigger_error=False
+    ):
         """ Perform an invalid auth request """
-        auth_url = self._get_auth_url(scopes, response_type,
-                                      trigger_error=trigger_error)
+        auth_url = self._get_auth_url(
+            scopes, response_type, trigger_error=trigger_error
+        )
         # Verify that the Authorization server redirects back correctly
         response = self.client.get(auth_url, follow=False)
         self._verify_redirect_params(response, error=error)
@@ -431,6 +419,7 @@ def app_auth(app):
 def create_auth_string(username, password):
     """ Create a Basic Auth string for the given credentials """
     import base64
+
     credentials = ("%s:%s" % (username, password)).encode('ascii')
     credentials = base64.b64encode(credentials).decode('ascii')
     auth_string = 'Basic %s' % credentials

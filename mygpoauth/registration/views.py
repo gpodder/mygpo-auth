@@ -52,8 +52,7 @@ class RegistrationView(TemplateView):
 
             except IntegrityError as ie:
                 if 'user_case_insensitive_unique' in str(ie):
-                    form.add_error('username',
-                                   _('This username is already taken.'))
+                    form.add_error('username', _('This username is already taken.'))
                     return self._render_error(request, form, app)
 
                 else:  # pragma: no cover
@@ -61,9 +60,7 @@ class RegistrationView(TemplateView):
 
             # we authorize the user for the app he used to register
             Authorization.objects.create(
-                user=new_user,
-                application=app,
-                scopes=[],  # TODO: which scopes? all?
+                user=new_user, application=app, scopes=[]  # TODO: which scopes? all?
             )
 
             site = RequestSite(request)
@@ -72,24 +69,23 @@ class RegistrationView(TemplateView):
         return HttpResponseRedirect(app.website_url)
 
     def _render_error(self, request, form, app):
-        return render(request, self.template_name, {
-            'form': form,
-            'app': app,
-        }, status=400)
+        return render(
+            request, self.template_name, {'form': form, 'app': app}, status=400
+        )
 
     def send_verification_mail(self, user, site):
         """ Creates and sends verification email to user """
-        subj = render_to_string('verification_email_subject.txt', {
-            'domain': site.domain,
-        })
+        subj = render_to_string(
+            'verification_email_subject.txt', {'domain': site.domain}
+        )
         # remove trailing newline added by render_to_string
         subj = subj.strip()
 
         token = user.email_verification.verification_token
-        msg = render_to_string('verification_email_message.txt', {
-            'domain': site.domain,
-            'verification_token': token,
-        })
+        msg = render_to_string(
+            'verification_email_message.txt',
+            {'domain': site.domain, 'verification_token': token},
+        )
         user.email_user(subj, msg)
 
 

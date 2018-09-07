@@ -7,9 +7,7 @@ import mygpoauth.applications.models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0001_initial'),
-    ]
+    dependencies = [('applications', '0001_initial')]
 
     operations = [
         migrations.AddField(
@@ -21,8 +19,10 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='application',
             name='client_id',
-            field=models.CharField(max_length=32, unique=True,
-                                   default=mygpoauth.applications.models.
-                                   random_token),
+            field=models.CharField(
+                max_length=32,
+                unique=True,
+                default=mygpoauth.applications.models.random_token,
+            ),
         ),
     ]

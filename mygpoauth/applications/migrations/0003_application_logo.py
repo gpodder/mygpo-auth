@@ -6,9 +6,7 @@ from django.db import models, migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0002_apps'),
-    ]
+    dependencies = [('applications', '0002_apps')]
 
     operations = [
         migrations.AddField(
@@ -16,5 +14,5 @@ class Migration(migrations.Migration):
             name='logo',
             field=models.ImageField(default=None, upload_to='logos/'),
             preserve_default=False,
-        ),
+        )
     ]

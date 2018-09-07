@@ -7,7 +7,7 @@ from django.contrib.postgres.fields import ArrayField
 
 
 def random_token(length=32):
-    return "".join(random.sample(string.ascii_letters+string.digits, length))
+    return "".join(random.sample(string.ascii_letters + string.digits, length))
 
 
 class Application(models.Model):
@@ -26,8 +26,7 @@ class Application(models.Model):
     platform = models.CharField(max_length=128)
 
     # the client_id for OAuth 2
-    client_id = models.CharField(max_length=32, default=random_token,
-                                 unique=True)
+    client_id = models.CharField(max_length=32, default=random_token, unique=True)
 
     # the client_secret for OAuth 2
     client_secret = models.CharField(max_length=32, default=random_token)

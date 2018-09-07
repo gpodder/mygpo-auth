@@ -6,15 +6,10 @@ from django.db import models, migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0003_application_logo'),
-    ]
+    dependencies = [('applications', '0003_application_logo')]
 
     operations = [
-        migrations.RemoveField(
-            model_name='application',
-            name='logo',
-        ),
+        migrations.RemoveField(model_name='application', name='logo'),
         migrations.AddField(
             model_name='application',
             name='description',

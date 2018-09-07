@@ -16,8 +16,7 @@ class AccessToken(models.Model):
     """ A token that an Application can use to access protected resources """
 
     # the authorization on which the token is based
-    authorization = models.ForeignKey(Authorization,
-                                      on_delete=models.CASCADE)
+    authorization = models.ForeignKey(Authorization, on_delete=models.CASCADE)
 
     # the authorized scopes; max length is given by "app:" 32-digit ID
     scopes = ArrayField(models.CharField(max_length=36, blank=False))
