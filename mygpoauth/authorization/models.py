@@ -20,7 +20,9 @@ class UpdateInfoModel(models.Model):
 class Authorization(UpdateInfoModel):
     """ An authorization for an app to a set of scopes granted by a user """
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )
 
     application = models.ForeignKey(Application, on_delete=models.CASCADE)
 

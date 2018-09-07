@@ -26,7 +26,9 @@ class OAuthTestBase(TestCase):
         self.app = Application.objects.create(
             name='Test', redirect_url='https://example.com/test?test=true'
         )
-        self.user = User.objects.create(username='username', email='user@example.com')
+        self.user = User.objects.create(
+            username='username', email='user@example.com'
+        )
         pwd = "".join(random.sample(string.ascii_letters, 8))
         self.user.set_password(pwd)
         self.user.save()
@@ -40,7 +42,11 @@ class OAuthTestBase(TestCase):
         self.user.delete()
 
     def _get_auth_url(
-        self, scopes, response_type='code', state='some_state', trigger_error=False
+        self,
+        scopes,
+        response_type='code',
+        state='some_state',
+        trigger_error=False,
     ):
         auth_url = reverse('oauth2:authorize')
 
@@ -105,7 +111,8 @@ class OAuthTestBase(TestCase):
         self.assertEqual(set(scopes), set(resp['scope'].split()))
 
         self.assertEqual(
-            int(resp['expires_in']), settings.DEFAULT_TOKEN_EXPIRATION.total_seconds()
+            int(resp['expires_in']),
+            settings.DEFAULT_TOKEN_EXPIRATION.total_seconds(),
         )
         return resp
 
@@ -189,7 +196,9 @@ class OAuthTestBase(TestCase):
         if expect_auth_page:
             response = self._fill_auth_form(auth_url, scopes)
 
-        response = self._follow_redirects(response, 'https://example.com/test.+')
+        response = self._follow_redirects(
+            response, 'https://example.com/test.+'
+        )
 
         code = self._catch_redirect(response)
         resp = self._tokens_from_auth_code(code, scopes)
@@ -255,7 +264,9 @@ class OAuth2Flow(OAuthTestBase):
         auth_url = self._get_auth_url(scopes)
         response = self._auth_request(auth_url)
         response = self._fill_auth_form(auth_url, scopes)
-        response = self._follow_redirects(response, 'https://example.com/test.+')
+        response = self._follow_redirects(
+            response, 'https://example.com/test.+'
+        )
         code = self._catch_redirect(response)
 
         # retrieve two tokens for the same authorization
@@ -301,7 +312,9 @@ class InvalidOAuthFlows(OAuthTestBase):
         auth_url = self._get_auth_url(scopes)
         response = self._auth_request(auth_url)
         response = self._auth_form_deny(auth_url, scopes)
-        response = self._follow_redirects(response, 'https://example.com/test.+')
+        response = self._follow_redirects(
+            response, 'https://example.com/test.+'
+        )
         self._verify_redirect_params(response, error='access_denied')
 
     def _auth_form_deny(self, auth_url, scopes):
@@ -318,7 +331,9 @@ class InvalidOAuthFlows(OAuthTestBase):
         auth_url = self._get_auth_url(scopes1)
         response = self._auth_request(auth_url)
         response = self._fill_auth_form(auth_url, scopes1)
-        response = self._follow_redirects(response, 'https://example.com/test.+')
+        response = self._follow_redirects(
+            response, 'https://example.com/test.+'
+        )
         code = self._catch_redirect(response)
         req = {
             'grant_type': 'authorization_code',
@@ -341,7 +356,9 @@ class InvalidTokenRequests(OAuthTestBase):
 
     def test_unknown_client_token_auth(self):
         """ Unknown client when authenticating for Token Endpoint """
-        resp = self._do_invalid_token_request({}, [], 401, 'invalid_client', auth='')
+        resp = self._do_invalid_token_request(
+            {}, [], 401, 'invalid_client', auth=''
+        )
         self.assertTrue(resp['WWW-Authenticate'].startswith('Basic realm="'))
 
     def test_invalid_grant_type(self):
@@ -387,7 +404,9 @@ class InvalidAuthRequests(OAuthTestBase):
 
     def test_invalid_scope(self):
         """ Test a request for aninvalid scope """
-        self._do_invalid_auth_request(scopes=['invalid scope'], error='invalid_scope')
+        self._do_invalid_auth_request(
+            scopes=['invalid scope'], error='invalid_scope'
+        )
 
     def test_invalid_response_type(self):
         """ Test a request with an invalid response type """

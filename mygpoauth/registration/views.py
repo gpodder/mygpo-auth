@@ -52,7 +52,9 @@ class RegistrationView(TemplateView):
 
             except IntegrityError as ie:
                 if 'user_case_insensitive_unique' in str(ie):
-                    form.add_error('username', _('This username is already taken.'))
+                    form.add_error(
+                        'username', _('This username is already taken.')
+                    )
                     return self._render_error(request, form, app)
 
                 else:  # pragma: no cover
@@ -60,7 +62,9 @@ class RegistrationView(TemplateView):
 
             # we authorize the user for the app he used to register
             Authorization.objects.create(
-                user=new_user, application=app, scopes=[]  # TODO: which scopes? all?
+                user=new_user,
+                application=app,
+                scopes=[],  # TODO: which scopes? all?
             )
 
             site = RequestSite(request)

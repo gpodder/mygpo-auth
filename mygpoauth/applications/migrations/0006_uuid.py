@@ -14,7 +14,9 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='application',
             name='uuid',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, serialize=False),
+            field=models.UUIDField(
+                default=uuid.uuid4, editable=False, serialize=False
+            ),
         ),
         #        migrations.AlterField(
         #            model_name='application',

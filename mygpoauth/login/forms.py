@@ -13,5 +13,6 @@ class MyAuthenticationForm(AuthenticationForm):
     )
 
     password = forms.CharField(
-        label='Password', widget=forms.PasswordInput(attrs={'placeholder': 'Password'})
+        label='Password',
+        widget=forms.PasswordInput(attrs={'placeholder': 'Password'}),
     )

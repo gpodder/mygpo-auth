@@ -9,6 +9,10 @@ class Migration(migrations.Migration):
     dependencies = [('authorization', '0003_fk_uuid')]
 
     operations = [
-        migrations.AlterUniqueTogether(name='authorization', unique_together=set([])),
-        migrations.RemoveField(model_name='authorization', name='applicationold'),
+        migrations.AlterUniqueTogether(
+            name='authorization', unique_together=set([])
+        ),
+        migrations.RemoveField(
+            model_name='authorization', name='applicationold'
+        ),
     ]

@@ -181,7 +181,9 @@ class AuthorizeView(OAuthView, TemplateResponseMixin):
         scopes = self._get_authorized_scopes(request)
 
         auth, created = Authorization.objects.update_or_create(
-            user=request.user, application=app, defaults={'scopes': list(scopes)}
+            user=request.user,
+            application=app,
+            defaults={'scopes': list(scopes)},
         )
 
         return self._success_redirect(app, auth, state)
@@ -196,7 +198,11 @@ class AuthorizeView(OAuthView, TemplateResponseMixin):
     def _error_redirect(self, app, err):
         """ Redirect to App's redirect_uri for error case """
         redir_url = self._build_redirect_url(
-            app, [('error', err.error), ('error_description', err.error_description)]
+            app,
+            [
+                ('error', err.error),
+                ('error_description', err.error_description),
+            ],
         )
         return http.HttpResponseRedirect(redir_url)
 
@@ -288,7 +294,9 @@ class TokenView(OAuthView):
 
         self._ensure_scope_subset(scopes, auth)
 
-        token = AccessToken.objects.create(authorization=auth, scopes=list(scopes))
+        token = AccessToken.objects.create(
+            authorization=auth, scopes=list(scopes)
+        )
 
         resp = {
             'token_type': 'Bearer',
@@ -350,7 +358,9 @@ class TokenInfoView(View):
             token = (
                 AccessToken.objects.filter(token=token)
                 .select_related(
-                    'authorization', 'authorization__application', 'authorization__user'
+                    'authorization',
+                    'authorization__application',
+                    'authorization__user',
                 )
                 .get()
             )

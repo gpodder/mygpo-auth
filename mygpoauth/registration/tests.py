@@ -13,7 +13,9 @@ class RegistrationTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.app = Application.objects.create(
-            name='Test App', client_id='test_app', website_url='http://www.app.com/'
+            name='Test App',
+            client_id='test_app',
+            website_url='http://www.app.com/',
         )
 
     def tearDown(self):
@@ -160,7 +162,9 @@ class RegistrationTests(TestCase):
 
         # find the verification URL(s), and make sure there was only one
         verify_urls = [
-            url for (url, name) in zip(rel_urls, url_names) if name == 'verify-email'
+            url
+            for (url, name) in zip(rel_urls, url_names)
+            if name == 'verify-email'
         ]
         self.assertEqual(len(verify_urls), 1)
 

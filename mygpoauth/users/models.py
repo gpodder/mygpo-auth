@@ -10,7 +10,8 @@ class UsernameValidator(RegexValidator):
 
     regex = r'^\w[\w.+-]*$'
     message = _(
-        'Please use only English letters, ' 'numbers, and @/./+/-/_ characters.'
+        'Please use only English letters, '
+        'numbers, and @/./+/-/_ characters.'
     )
     flags = re.ASCII
 

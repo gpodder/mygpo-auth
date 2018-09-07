@@ -35,13 +35,15 @@ class Migration(migrations.Migration):
                 (
                     'expires',
                     models.DateTimeField(
-                        db_index=True, default=mygpoauth.oauth2.models._default_expires
+                        db_index=True,
+                        default=mygpoauth.oauth2.models._default_expires,
                     ),
                 ),
                 (
                     'authorization',
                     models.ForeignKey(
-                        to='authorization.Authorization', on_delete=models.CASCADE
+                        to='authorization.Authorization',
+                        on_delete=models.CASCADE,
                     ),
                 ),
             ],

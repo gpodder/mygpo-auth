@@ -28,7 +28,9 @@ class Migration(migrations.Migration):
                 ),
                 (
                     'verification_token',
-                    models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, unique=True
+                    ),
                 ),
                 ('is_verified', models.BooleanField(default=False)),
             ],

@@ -11,7 +11,9 @@ class AuthenticationTests(TestCase):
     """ Provides test data for OAuth tests """
 
     def setUp(self):
-        self.user = User.objects.create(username='UserName', email='user@example.com')
+        self.user = User.objects.create(
+            username='UserName', email='user@example.com'
+        )
         self.pwd = "".join(random.sample(string.ascii_letters, 8))
         self.user.set_password(self.pwd)
         self.user.save()
@@ -20,7 +22,9 @@ class AuthenticationTests(TestCase):
         self.user.delete()
 
     def test_case_insensitive_login(self):
-        user = authenticate(username=self.user.username.lower(), password=self.pwd)
+        user = authenticate(
+            username=self.user.username.lower(), password=self.pwd
+        )
         self.assertIsNotNone(user)
 
     def test_invalid_user(self):

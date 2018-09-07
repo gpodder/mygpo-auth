@@ -11,7 +11,9 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
     path(
         '',
-        RedirectView.as_view(url='http://mygpo-auth.rtfd.org/', permanent=False),
+        RedirectView.as_view(
+            url='http://mygpo-auth.rtfd.org/', permanent=False
+        ),
         name='index',
     ),
     path('admin/', admin.site.urls),
