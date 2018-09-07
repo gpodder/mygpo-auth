@@ -2,6 +2,8 @@
 branch = True
 source=mygpoauth/
 omit=*/admin.py,*/wsgi.py,*/tests.py,*/management/*,mygpoauth/settings.py
+plugins =
+    django_coverage_plugin
 
 
 [report]
