@@ -8,19 +8,19 @@ import uuid
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0005_application_website_url'),
-    ]
+    dependencies = [('applications', '0005_application_website_url')]
 
     operations = [
         migrations.AddField(
             model_name='application',
             name='uuid',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, serialize=False),
+            field=models.UUIDField(
+                default=uuid.uuid4, editable=False, serialize=False
+            ),
         ),
-#        migrations.AlterField(
-#            model_name='application',
-#           name='id',
-#            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
-#        ),
+        #        migrations.AlterField(
+        #            model_name='application',
+        #           name='id',
+        #            field=models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False),
+        #        ),
     ]

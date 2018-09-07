@@ -3,7 +3,6 @@ language: python
 dist: xenial
 
 python:
-  - "3.5"
   - "3.6"
 
 sudo: true
@@ -22,6 +21,7 @@ install:
 
 script:
   - coverage run --branch --source=mygpoauth ./manage.py test
+  - make check-code-format
 
 after_script:
   - coveralls

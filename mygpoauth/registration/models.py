@@ -19,12 +19,8 @@ class EmailVerification(models.Model):
 
     # Token used to verify
     verification_token = models.UUIDField(
-        unique=True,
-        default=uuid.uuid4,
-        editable=False,
+        unique=True, default=uuid.uuid4, editable=False
     )
 
     # Flag if verification has been completed
-    is_verified = models.BooleanField(
-        default=False,
-    )
+    is_verified = models.BooleanField(default=False)

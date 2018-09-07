@@ -6,9 +6,7 @@ from django.db import models, migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('applications', '0004_info_fields'),
-    ]
+    dependencies = [('applications', '0004_info_fields')]
 
     operations = [
         migrations.AddField(
@@ -16,5 +14,5 @@ class Migration(migrations.Migration):
             name='website_url',
             field=models.URLField(default=''),
             preserve_default=False,
-        ),
+        )
     ]

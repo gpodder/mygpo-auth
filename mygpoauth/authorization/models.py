@@ -20,11 +20,11 @@ class UpdateInfoModel(models.Model):
 class Authorization(UpdateInfoModel):
     """ An authorization for an app to a set of scopes granted by a user """
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL,
-                             on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+    )
 
-    application = models.ForeignKey(Application,
-                                    on_delete=models.CASCADE)
+    application = models.ForeignKey(Application, on_delete=models.CASCADE)
 
     # max length is given by "app:" 32-digit ID
     scopes = ArrayField(models.CharField(max_length=36, blank=False))
@@ -32,6 +32,4 @@ class Authorization(UpdateInfoModel):
     code = models.UUIDField(default=uuid.uuid4)
 
     class Meta:
-        unique_together = [
-            ('user', 'application'),
-        ]
+        unique_together = [('user', 'application')]

@@ -74,7 +74,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
             ],
         },
-    },
+    }
 ]
 
 WSGI_APPLICATION = 'mygpoauth.wsgi.application'
@@ -83,9 +83,7 @@ WSGI_APPLICATION = 'mygpoauth.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
-DATABASES = {
-    'default': dj_database_url.config(),
-}
+DATABASES = {'default': dj_database_url.config()}
 
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
@@ -115,9 +113,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
 
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, '..', 'static'),
-)
+STATICFILES_DIRS = (os.path.join(BASE_DIR, '..', 'static'),)
 
 LOGIN_URL = 'login:login'
 
@@ -125,7 +121,7 @@ LOGIN_URL = 'login:login'
 DEFAULT_TOKEN_EXPIRATION = timedelta(hours=1)
 
 AUTHENTICATION_BACKENDS = [
-    'mygpoauth.login.backend.CaseInsensitiveModelBackend',
+    'mygpoauth.login.backend.CaseInsensitiveModelBackend'
 ]
 
 # Client ID of the application that is used during
