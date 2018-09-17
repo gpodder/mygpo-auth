@@ -40,7 +40,7 @@ Pygments==2.2.0
 pyparsing==2.2.0
 pytest==3.7.4
 pytest-cov==2.6.0
-pytest-django==3.4.2
+pytest-django==3.4.3
 python-dateutil==2.7.3
 pytz==2018.5
 requests==2.19.1
