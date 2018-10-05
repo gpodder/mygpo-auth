@@ -11,7 +11,7 @@ click==6.7
 coverage==4.5.1
 dj-database-url==0.5.0
 dj-static==0.0.6
-Django==2.1.1
+Django==2.1.2
 django-coverage-plugin==1.6rc1
 django-nose==1.4.5
 docutils==0.14
