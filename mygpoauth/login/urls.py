@@ -8,9 +8,13 @@ from . import forms
 app_name = 'login'
 
 urlpatterns = [
-    path('', auth_views.login, {
-        'template_name': 'login/login.html',
-        'authentication_form': forms.MyAuthenticationForm,
+    path(
+        '',
+        auth_views.LoginView.as_view(),
+        {
+            'template_name': 'login/login.html',
+            'authentication_form': forms.MyAuthenticationForm,
         },
-        name='login'),
+        name='login',
+    )
 ]

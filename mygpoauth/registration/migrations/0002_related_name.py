@@ -8,9 +8,7 @@ import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('registration', '0001_initial'),
-    ]
+    dependencies = [('registration', '0001_initial')]
 
     operations = [
         migrations.AlterField(
@@ -21,7 +19,7 @@ class Migration(migrations.Migration):
                 primary_key=True,
                 related_name='email_verification',
                 serialize=False,
-                to='users.CustomUser'
+                to='users.CustomUser',
             ),
-        ),
+        )
     ]

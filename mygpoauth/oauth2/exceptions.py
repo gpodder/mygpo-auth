@@ -11,19 +11,20 @@ class OAuthError(Exception):
 class UnsupportedGrantType(OAuthError):
     """ The authorization grant type is not supported by the authorization
     server."""
+
     error = 'unsupported_grant_type'
 
     def __init__(self, grant_type):
-        self.error_description = ('The grant type "{grant_type}" is not '
-                                  'supported'.format(grant_type=grant_type))
+        self.error_description = (
+            'The grant type "{grant_type}" is not '
+            'supported'.format(grant_type=grant_type)
+        )
 
 
 class MissingGrantType(UnsupportedGrantType):
-
     def __init__(self):
         super()
-        self.error_description = ('The required parameter "grant_type" is '
-                                  'missing.')
+        self.error_description = 'The required parameter "grant_type" is ' 'missing.'
 
 
 class InvalidGrant(OAuthError):
@@ -78,9 +79,9 @@ class UnsupportedResponseType(OAuthError):
     code using this method. """
 
     def __init__(self, response_type):
-        self.error_description = (
-            'The response type "{response_type}" is not supported'
-            .format(response_type=response_type))
+        self.error_description = 'The response type "{response_type}" is not supported'.format(
+            response_type=response_type
+        )
 
     error = 'unsupported_response_type'
 

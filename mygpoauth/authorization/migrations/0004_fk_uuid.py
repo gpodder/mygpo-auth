@@ -6,17 +6,13 @@ from django.db import models, migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('authorization', '0003_fk_uuid'),
-    ]
+    dependencies = [('authorization', '0003_fk_uuid')]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='authorization',
-            unique_together=set([]),
+            name='authorization', unique_together=set([])
         ),
         migrations.RemoveField(
-            model_name='authorization',
-            name='applicationold',
+            model_name='authorization', name='applicationold'
         ),
     ]

@@ -1,7 +1,19 @@
 language: python
 
+dist: xenial
+
 python:
   - "3.7"
+
+sudo: true
+
+services:
+  - postgresql
+addons:
+  postgresql: "10"
+
+before_script:
+  - psql -c "ALTER USER travis WITH PASSWORD 'travis';"
 
 install:
   - travis_retry pip install -r requirements.txt
@@ -9,11 +21,10 @@ install:
 
 script:
   - coverage run --branch --source=mygpoauth ./manage.py test
+  - make check-code-format
 
 after_script:
   - coveralls
 
-sudo: false
-
 env:
- - DATABASE_URL="postgres://postgres@localhost/mygpo_test"
+ - DATABASE_URL="postgres://travis:travis@localhost/mygpo_test"

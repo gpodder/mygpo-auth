@@ -4,7 +4,6 @@ from . import scope
 
 
 class ScopeGroupTests(TestCase):
-
     def test_ActionsScopeGroup_invalid_scope(self):
         sg = scope.ActionsScopeGroup()
         with self.assertRaises(ValueError):

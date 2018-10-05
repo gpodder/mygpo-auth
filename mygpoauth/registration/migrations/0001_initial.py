@@ -11,31 +11,28 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-        ('users', '0001_initial'),
-    ]
+    dependencies = [('users', '0001_initial')]
 
     operations = [
         migrations.CreateModel(
             name='EmailVerification',
             fields=[
-                ('user',
-                 models.OneToOneField(
-                     on_delete=django.db.models.deletion.CASCADE,
-                     primary_key=True,
-                     serialize=False,
-                     to='users.CustomUser')
-                 ),
-                ('verification_token',
-                 models.UUIDField(
-                     default=uuid.uuid4,
-                     editable=False,
-                     unique=True)
-                 ),
-                ('is_verified',
-                 models.BooleanField(
-                     default=False)
-                 ),
+                (
+                    'user',
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        serialize=False,
+                        to='users.CustomUser',
+                    ),
+                ),
+                (
+                    'verification_token',
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, unique=True
+                    ),
+                ),
+                ('is_verified', models.BooleanField(default=False)),
             ],
-        ),
+        )
     ]
