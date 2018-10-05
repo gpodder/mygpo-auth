@@ -1,7 +1,7 @@
 alabaster==0.7.11
 appdirs==1.4.3
 atomicwrites==1.2.1
-attrs==18.1.0
+attrs==18.2.0
 Babel==2.6.0
 black==18.6b4
 bleach==2.1.4
