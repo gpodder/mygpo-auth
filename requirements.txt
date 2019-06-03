@@ -46,7 +46,7 @@ pytz==2018.5
 requests==2.20.0
 six==1.11.0
 snowballstemmer==1.2.1
-Sphinx==1.8.1
+Sphinx==2.1.0
 sphinxcontrib-httpdomain==1.7.0
 sphinxcontrib-websupport==1.1.0
 static3==0.7.0
