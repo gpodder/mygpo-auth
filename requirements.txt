@@ -17,7 +17,7 @@ django-nose==1.4.5
 docutils==0.14
 envdir==1.0.1
 flake8==3.5.0
-freezegun==0.3.10
+freezegun==0.3.14
 gunicorn==19.9.0
 html5lib==1.0.1
 idna==2.7
