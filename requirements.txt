@@ -47,7 +47,7 @@ pytest-django==3.8.0
 python-dateutil==2.7.3
 pytz==2018.5
 regex==2020.1.8
-requests==2.19.1
+requests==2.22.0
 six==1.11.0
 snowballstemmer==1.2.1
 Sphinx==2.3.1
