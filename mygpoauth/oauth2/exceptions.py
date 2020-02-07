@@ -1,4 +1,3 @@
-
 """ Exceptions for Error responses
 
 according to http://tools.ietf.org/html/rfc6749#section-5.2 """
@@ -24,7 +23,9 @@ class UnsupportedGrantType(OAuthError):
 class MissingGrantType(UnsupportedGrantType):
     def __init__(self):
         super()
-        self.error_description = 'The required parameter "grant_type" is ' 'missing.'
+        self.error_description = (
+            'The required parameter "grant_type" is ' 'missing.'
+        )
 
 
 class InvalidGrant(OAuthError):
