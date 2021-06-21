@@ -63,5 +63,5 @@ sqlparse==0.3.0
 static3==0.7.0
 toml==0.9.4
 typed-ast==1.4.1
-urllib3==1.23
+urllib3==1.25.9
 webencodings==0.5.1
